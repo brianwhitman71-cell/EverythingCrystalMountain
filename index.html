@@ -60,17 +60,6 @@
         .logo-text p { font-size: 0.7rem; color: #7ec8e3; text-transform: uppercase; letter-spacing: 1.5px; }
 
         .header-right { display: flex; align-items: center; gap: 1rem; font-size: 0.78rem; color: #7ec8e3; }
-        #snow-toggle-btn {
-            background: none; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%;
-            width: 30px; height: 30px; cursor: pointer; font-size: 1rem; line-height: 1;
-            display: flex; align-items: center; justify-content: center;
-            color: #7ec8e3; transition: all 0.2s; flex-shrink: 0;
-            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-        }
-        #snow-toggle-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
-        #snow-toggle-btn.snow-on  { color: white; border-color: rgba(147,210,255,0.7); background: rgba(56,189,248,0.15); }
-        #snow-toggle-btn.snow-off { color: #3d5a70; border-color: rgba(255,255,255,0.08); }
-
         .refresh-btn {
             background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.15);
@@ -136,53 +125,6 @@
         .temp-display { display: flex; align-items: flex-start; gap: 0.1rem; }
         .temp-big { font-size: 2.8rem; font-weight: 200; line-height: 1; color: white; display: inline-block; }
 
-        /* Shiver — rapid jittery shake, intensity driven by --ti (0–1) */
-        @keyframes temp-shiver {
-            0%   { transform: translateX(0)                           rotate(0deg); }
-            10%  { transform: translateX(calc(var(--ti) * -4px))      rotate(calc(var(--ti) * -1.5deg)); }
-            20%  { transform: translateX(calc(var(--ti) *  4px))      rotate(calc(var(--ti) *  1.5deg)); }
-            30%  { transform: translateX(calc(var(--ti) * -6px))      rotate(calc(var(--ti) * -2deg)); }
-            40%  { transform: translateX(calc(var(--ti) *  3px))      rotate(calc(var(--ti) *  1deg)); }
-            50%  { transform: translateX(calc(var(--ti) * -5px))      rotate(calc(var(--ti) * -1.8deg)); }
-            60%  { transform: translateX(calc(var(--ti) *  5px))      rotate(calc(var(--ti) *  2deg)); }
-            70%  { transform: translateX(calc(var(--ti) * -3px))      rotate(calc(var(--ti) * -1deg)); }
-            80%  { transform: translateX(calc(var(--ti) *  6px))      rotate(calc(var(--ti) *  2.2deg)); }
-            90%  { transform: translateX(calc(var(--ti) * -4px))      rotate(calc(var(--ti) * -1.5deg)); }
-            100% { transform: translateX(0)                           rotate(0deg); }
-        }
-        /* Sweat — slow droopy sag with slight vertical wobble, intensity driven by --ti */
-        @keyframes temp-sweat {
-            0%   { transform: scaleY(1)                               translateY(0)                        skewX(0deg); filter: blur(0); }
-            20%  { transform: scaleY(calc(1 + var(--ti) * 0.025))    translateY(calc(var(--ti) * 2px))    skewX(calc(var(--ti) * 0.8deg)); filter: blur(calc(var(--ti) * 0.4px)); }
-            50%  { transform: scaleY(calc(1 + var(--ti) * 0.04))     translateY(calc(var(--ti) * 4px))    skewX(calc(var(--ti) * -0.5deg)); filter: blur(calc(var(--ti) * 0.7px)); }
-            75%  { transform: scaleY(calc(1 + var(--ti) * 0.02))     translateY(calc(var(--ti) * 2px))    skewX(calc(var(--ti) * 0.4deg)); filter: blur(calc(var(--ti) * 0.3px)); }
-            100% { transform: scaleY(1)                               translateY(0)                        skewX(0deg); filter: blur(0); }
-        }
-        .temp-shiver { animation: temp-shiver calc(var(--td) * 1s) linear infinite; }
-        .temp-sweat  { animation: temp-sweat  calc(var(--td) * 1s) ease-in-out infinite; }
-
-        /* Steam */
-        @keyframes steam-rise {
-            0%   { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
-            15%  { opacity: 0.55; }
-            60%  { transform: translateY(calc(var(--st-ht) * -0.6px)) translateX(calc(var(--st-wx) * 6px)) scale(1.3); opacity: 0.28; }
-            100% { transform: translateY(calc(var(--st-ht) * -1px))  translateX(calc(var(--st-wx) * 12px)) scale(2.2); opacity: 0; }
-        }
-        .steam-puff {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.4);
-            pointer-events: none;
-            z-index: 10;
-            filter: blur(6px);
-            animation: steam-rise var(--st-dur) ease-out forwards;
-        }
-        /* Pulse */
-        @keyframes temp-pulse {
-            0%, 100% { transform: scale(1); }
-            50%       { transform: scale(calc(1 + var(--ti) * 0.08)); }
-        }
-        .temp-pulse { animation: temp-pulse calc(var(--td) * 1s) ease-in-out infinite; }
         .temp-unit { font-size: 1.8rem; color: #7ec8e3; margin-top: 0.6rem; }
         .weather-condition { font-size: 1rem; color: #90cdf4; margin: 0.4rem 0 0.25rem; }
         .feels-like { font-size: 0.8rem; color: #567a96; line-height: 1.6; }
@@ -1163,8 +1105,8 @@
         <div class="nav-item active" id="nav-home" onclick="navigateTo('home')">
             <span class="nav-item-icon">🏠</span> Home
         </div>
-        <div class="nav-item" id="nav-report" onclick="navigateTo('report')">
-            <span class="nav-item-icon">📋</span> Today's Mountain Report
+        <div class="nav-item" id="nav-weather" onclick="navigateTo('weather')">
+            <span class="nav-item-icon">🌤️</span> Weather &amp; Forecast
         </div>
         <div class="nav-divider"></div>
         <div class="nav-section-label">Explore</div>
@@ -1212,6 +1154,9 @@
     <button class="tab-btn active" id="tab-home" onclick="navigateTo('home')">
         <span class="tab-icon">🏠</span>Home
     </button>
+    <button class="tab-btn" id="tab-weather" onclick="navigateTo('weather')">
+        <span class="tab-icon">🌤️</span>Weather
+    </button>
     <button class="tab-btn" id="tab-food" onclick="navigateTo('food')">
         <span class="tab-icon">🍽️</span>On Mountain
     </button>
@@ -1252,9 +1197,7 @@
         </div>
     </div>
     <div class="header-right">
-        <button id="snow-toggle-btn" title="Toggle snow effect" onclick="toggleSnowOverlay()" style="display:none">❄</button>
         <span id="last-updated"></span>
-        <button id="mountain-report-header-btn" class="refresh-btn" onclick="navigateTo('report')" style="background:rgba(56,189,248,0.15);border-color:rgba(56,189,248,0.4);color:#7ec8e3">📋 Today's Mountain Report</button>
         <button class="refresh-btn" id="refresh-btn" onclick="fetchWeather()">&#8635; Refresh</button>
     </div>
 </header>
@@ -1265,10 +1208,19 @@
 
 <div class="container">
 
-    <!-- Home view -->
+    <!-- Home view — summer activities summary -->
     <div id="view-home" class="view active">
         <div id="photo-carousel-wrap"></div>
-        <button class="mobile-report-banner" onclick="navigateTo('report')">📋 Today's Mountain Report</button>
+        <button class="mobile-report-banner" onclick="navigateTo('weather')">🌤️ Today's Weather &amp; Forecast</button>
+        <div id="home-content"></div>
+    </div>
+
+    <!-- Weather view — current conditions, 7-day forecast, lift / summer-ops status -->
+    <div id="view-weather" class="view">
+        <div class="page-header">
+            <button class="page-back-btn" onclick="navigateTo('home')">← Back</button>
+            <span class="page-title">🌤️ Weather &amp; Forecast</span>
+        </div>
         <div id="content">
             <div class="loading">
                 <div class="spinner"></div>
@@ -1387,14 +1339,6 @@
         <div id="markets-content"></div>
     </div>
 
-    <!-- Mountain Report view -->
-    <div id="view-report" class="view">
-        <div class="page-header">
-            <button class="page-back-btn" onclick="navigateTo('home')">← Back</button>
-            <span class="page-title">📋 Today's Mountain Report</span>
-        </div>
-        <div id="report-content"></div>
-    </div>
 
 </div>
 
@@ -1490,69 +1434,8 @@
         return new Date(isoStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     }
 
-    function snowClass(in_) {
-        if (!in_ || in_ < 0.1) return 'sn-none';
-        if (in_ < 2)  return 'sn-light';
-        if (in_ < 6)  return 'sn-mod';
-        return 'sn-heavy';
-    }
-
-    // ── Ski Condition Scoring ──────────────────────────────────────────────
+    // RAIN_CODES is still used by road-conditions to flag wet pavement
     const RAIN_CODES = new Set([51,53,55,61,63,65,80,81,82]);
-
-    function skiScore(tempMax, snowfall, windMax, precipProb, weatherCode, snowDepthIn) {
-        const isRainy = RAIN_CODES.has(weatherCode) || (tempMax > 36 && precipProb > 45);
-        let s = 45;
-        // Base depth
-        if (snowDepthIn >= 60) s += 15;
-        else if (snowDepthIn >= 40) s += 10;
-        else if (snowDepthIn >= 24) s += 5;
-        else if (snowDepthIn < 12) s -= 12;
-        // New snow
-        if (snowfall >= 8)   s += 35;
-        else if (snowfall >= 4)   s += 25;
-        else if (snowfall >= 2)   s += 15;
-        else if (snowfall >= 0.5) s += 7;
-        // Temp
-        if (tempMax < 20)      s += 10;
-        else if (tempMax < 28) s += 5;
-        else if (tempMax > 40) s -= 22;
-        else if (tempMax > 36) s -= 12;
-        // Wind
-        if (windMax > 50)      s -= 20;
-        else if (windMax > 35) s -= 10;
-        else if (windMax > 25) s -= 4;
-        // Rain
-        if (isRainy) s -= 32;
-        return Math.max(0, Math.min(100, s));
-    }
-
-    function skiRating(score) {
-        if (score >= 82) return { label: 'Powder!',   cls: 'ski-powder',    pill: 'pill-powder',    note: 'Epic powder day — first tracks await!' };
-        if (score >= 68) return { label: 'Excellent', cls: 'ski-excellent', pill: 'pill-excellent', note: 'Outstanding conditions all mountain.' };
-        if (score >= 52) return { label: 'Good',      cls: 'ski-good',      pill: 'pill-good',      note: 'Solid groomed and natural snow.' };
-        if (score >= 36) return { label: 'Fair',      cls: 'ski-fair',      pill: 'pill-fair',      note: 'Groomed runs best. Variable off-piste.' };
-        if (score >= 20) return { label: 'Poor',      cls: 'ski-poor',      pill: 'pill-poor',      note: 'Limited open terrain. Check trail report.' };
-        return            { label: 'Icy / Wet', cls: 'ski-icy',       pill: 'pill-icy',       note: 'Icy or wet — extreme caution advised.' };
-    }
-
-    function trailHTML(score) {
-        const g  = score >= 20;
-        const b  = score >= 40;
-        const bl = score >= 54;
-        const db = score >= 68;
-        return `
-            <div class="trail-icons">
-                <div class="trail-icon t-green ${g  ? 'active' : ''}" title="Beginner">●</div>
-                <div class="trail-icon t-blue  ${b  ? 'active' : ''}" title="Intermediate">■</div>
-                <div class="trail-icon t-black ${bl ? 'active' : ''}" title="Advanced"><span>◆</span></div>
-                <div class="t-dbl" title="Expert / Double Black">
-                    <div class="t-dbl-d ${db ? 'active' : ''}"></div>
-                    <div class="t-dbl-d ${db ? 'active' : ''}"></div>
-                </div>
-            </div>`;
-    }
-    // ───────────────────────────────────────────────────────────────────────
 
     function conditionBadge(tempF, snowDepthIn, newSnowIn, isRaining) {
         if (isRaining && tempF > 34)
@@ -1582,17 +1465,17 @@
                 elevation: 1212,
                 current: [
                     'temperature_2m','apparent_temperature','relative_humidity_2m',
-                    'precipitation','rain','snowfall','snow_depth',
+                    'precipitation','rain',
                     'wind_speed_10m','wind_direction_10m','wind_gusts_10m',
                     'weather_code','is_day','visibility'
                 ].join(','),
                 hourly: [
                     'temperature_2m','precipitation_probability',
-                    'snowfall','wind_speed_10m','weather_code'
+                    'wind_speed_10m','weather_code'
                 ].join(','),
                 daily: [
                     'weather_code','temperature_2m_max','temperature_2m_min',
-                    'precipitation_sum','snowfall_sum','wind_speed_10m_max',
+                    'precipitation_sum','wind_speed_10m_max',
                     'precipitation_probability_max','sunrise','sunset'
                 ].join(','),
                 temperature_unit: 'fahrenheit',
@@ -1609,32 +1492,14 @@
 
             _latestWeather = data;
             render(data);
-            fetchSeasonSnow();
             const _wc = data.current.weather_code;
-            const _todaySnow = data.daily.snowfall_sum[7] || 0;
-            const _isSnowing = SNOW_CODES.has(_wc) || (data.current.snowfall > 0) || (_todaySnow > 0.05);
-            const _snowIntensity = SNOW_INTENSITY[_wc] ?? Math.min(1, Math.max(
-                (data.current.snowfall || 0) * 2,
-                _todaySnow > 0.05 ? Math.min(0.6, 0.25 + _todaySnow / 8) : 0
-            ));
-            if (_isSnowing) {
-                _lastSnowArgs = [_snowIntensity || 0.25, data.current.wind_speed_10m, data.current.wind_direction_10m, data.current.wind_gusts_10m];
-                if (!_snowUserOff) startSnowfall(..._lastSnowArgs);
-                stopRainfall();
-            } else if (RAIN_CODES.has(_wc)) {
-                _lastSnowArgs = null;
-                stopSnowfall();
+            // Summer-first site: no snow overlay, no snow detection. Rain overlay only.
+            if (RAIN_CODES.has(_wc)) {
                 const rainInt = RAIN_CODES_INTENSITY[_wc] || 0.5;
                 startRainfall(rainInt, data.current.wind_speed_10m, data.current.wind_direction_10m, data.current.wind_gusts_10m);
             } else {
-                _lastSnowArgs = null;
-                stopSnowfall();
                 stopRainfall();
             }
-            _updateSnowBtn();
-            const _tDiff = data.current.apparent_temperature - 32;
-            if (_tDiff > 0) startSteam(Math.min(1, _tDiff / 40));
-            else stopSteam();
             document.getElementById('last-updated').textContent =
                 'Updated ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         } catch (e) {
@@ -1651,104 +1516,16 @@
         }
     }
 
-    function _renderSeasonSnow(seasonIn, normalIn, source) {
-        const el = document.getElementById('season-snow-tracker');
-        if (!el || seasonIn == null) return;
-        const pct = normalIn > 0 ? Math.round(seasonIn / normalIn * 100) : null;
-        const pctColor = pct === null ? '#38bdf8'
-            : pct >= 110 ? '#4ade80'
-            : pct >= 90  ? '#38bdf8'
-            : pct >= 70  ? '#fbbf24'
-            : '#f87171';
-        const barW = Math.min(100, pct ?? 0);
-        const overflowW = pct > 100 ? Math.min(20, pct - 100) : 0;
-        el.innerHTML = `
-            <div style="margin-top:0.9rem;border-top:1px solid rgba(255,255,255,0.07);padding-top:0.8rem">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem">
-                    <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:#567a96">Season Snowfall</span>
-                    ${pct !== null ? `<span style="font-size:0.7rem;font-weight:600;color:${pctColor}">${pct}% of normal</span>` : ''}
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.35rem">
-                    <span style="font-size:1.35rem;font-weight:700;color:white;line-height:1">${Math.round(seasonIn)}"</span>
-                    <span style="font-size:0.68rem;color:#567a96">Avg ${normalIn}"</span>
-                </div>
-                <div style="position:relative;height:7px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;margin-bottom:0.3rem">
-                    <div style="position:absolute;left:0;top:0;height:100%;width:${barW}%;background:${pctColor};opacity:0.75;border-radius:4px;transition:width 0.6s ease"></div>
-                    ${overflowW > 0 ? `<div style="position:absolute;right:0;top:0;height:100%;width:${overflowW}%;background:${pctColor};opacity:0.5;border-radius:4px"></div>` : ''}
-                </div>
-                <div style="font-size:0.58rem;color:#3a5570;text-align:right">${source}</div>
-            </div>`;
-    }
-
-    async function fetchSeasonSnow() {
-        const el = document.getElementById('season-snow-tracker');
-        if (!el) return;
-
-        const sr = _sbLive && _sbLive.SnowReport;
-        const seasonIn = sr ? parseFloat(sr.SeasonTotalIn) || null : null;
-        if (seasonIn == null) return;
-
-        // Crystal Mountain WA historical average season snowfall (~486" / 40+ feet — one of the snowiest resorts in the US)
-        const HIST_NORMAL = 486;
-
-        // Show immediately with hardcoded historical normal
-        _renderSeasonSnow(seasonIn, HIST_NORMAL, 'Crystal Mtn reported total · avg ~486" historical');
-
-        // Try SNOTEL for a more precise historical median (SWE-derived)
-        try {
-            const now = new Date();
-            const wyYear = now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1;
-            const wyStart = `${wyYear}-10-01`;
-            const today = now.toISOString().split('T')[0];
-            // SNOTEL site #482:WA:SNTL — "Morse Lake" near Crystal Mountain summit (closest active SNOTEL to the resort)
-            const url = `https://wcc.sc.egov.usda.gov/reportGenerator/view_csv/customSingleStationReport/daily/482:WA:SNTL/${wyStart},${today}/PREC::value,PREC::median`;
-            const resp = await fetch('https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url));
-            if (!resp.ok) throw new Error('proxy error');
-            const text = await resp.text();
-            const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('#') && !l.toLowerCase().startsWith('date'));
-            if (!lines.length) throw new Error('no data');
-            const cols = lines[lines.length - 1].split(',');
-            const actualSwe = parseFloat(cols[1]);
-            const medianSwe = parseFloat(cols[2]);
-            if (!isNaN(actualSwe) && !isNaN(medianSwe) && medianSwe > 0) {
-                // Use SNOTEL SWE ratio applied to Crystal Mtn's own season total
-                const snotelPct = Math.round(actualSwe / medianSwe * 100);
-                const impliedNormal = Math.round(seasonIn / (snotelPct / 100));
-                _renderSeasonSnow(seasonIn, impliedNormal, 'Crystal Mtn total · % vs. NRCS SNOTEL #482 (Morse Lake) median');
-            }
-        } catch(e) {
-            // SNOTEL unavailable — hardcoded average already shown
-        }
-    }
-
     function render(data) {
         const cur = data.current;
         const daily = data.daily;
         const hourly = data.hourly;
 
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
 
-        // Derived values
-        const snowDepthIn = (cur.snow_depth || 0) * 39.3701;   // m → inches
         const T = 7; // today's index in daily arrays (past_days=7)
-        const todaySnow   = daily.snowfall_sum[T] || 0;          // inches
-        const next24Snow  = hourly.snowfall.slice(0, 24).reduce((a, b) => a + (b || 0), 0);
-        const badge = conditionBadge(cur.temperature_2m, snowDepthIn, todaySnow, (cur.rain || 0) > 0);
+        const badge = conditionBadge(cur.temperature_2m, 0, 0, (cur.rain || 0) > 0);
         const wi = wmo(cur.weather_code);
-
-        // Powder alert
-        let alertHtml = '';
-        if (next24Snow >= 4) {
-            alertHtml = `
-            <div class="powder-alert">
-                <div class="powder-alert-badge">❄️</div>
-                <div>
-                    <div class="powder-alert-text">POWDER ALERT — ${next24Snow.toFixed(1)}" of snow in the next 24 hours!</div>
-                    <div class="powder-alert-sub">Set your alarm. Get there early. It's going to be epic.</div>
-                </div>
-            </div>`;
-        }
 
         // Hourly cards — start from current hour
         const startIdx = hourly.time.findIndex(t => new Date(t) >= now);
@@ -1759,14 +1536,12 @@
             const isNow = i === startIdx;
             const label = isNow ? 'NOW' : (h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h-12}pm`);
             const w = wmo(hourly.weather_code[i]);
-            const sn = hourly.snowfall[i] || 0;
             const prob = hourly.precipitation_probability[i] || 0;
             hourlyHtml += `
                 <div class="hour-card ${isNow ? 'now' : ''}">
                     <div class="hour-time">${label}</div>
                     <div class="hour-icon">${w.icon}</div>
                     <div class="hour-temp">${fmt(hourly.temperature_2m[i])}</div>
-                    ${sn >= 0.01 ? `<div class="hour-snow">❄️ ${sn.toFixed(2)}"</div>` : ''}
                     ${prob > 10 ? `<div class="hour-prob">${prob}%</div>` : ''}
                 </div>`;
         }
@@ -1779,10 +1554,8 @@
             const dayLabel = i === T ? 'Today' : i === T + 1 ? 'Tmrw' : DAYS[d.getDay()];
             const dateLabel = `${d.getMonth()+1}/${d.getDate()}`;
             const w = wmo(daily.weather_code[i]);
-            const sn = daily.snowfall_sum[i] || 0;
-            const snLabel = sn >= 0.1 ? `❄️ ${sn.toFixed(1)}"` : 'No snow';
-            const snCls = snowClass(sn);
             const precip = daily.precipitation_probability_max[i] || 0;
+            const precipIn = daily.precipitation_sum[i] || 0;
             dailyHtml += `
                 <div class="day-card ${i === 0 ? 'today' : ''}">
                     <div class="day-name">${dayLabel}</div>
@@ -1792,13 +1565,9 @@
                         <span class="day-hi">${fmt(daily.temperature_2m_max[i])}</span>
                         <span class="day-lo">${fmt(daily.temperature_2m_min[i])}</span>
                     </div>
-                    <div class="day-snow ${snCls}">${snLabel}</div>
-                    ${precip > 10 ? `<div class="day-precip">${precip}% precip</div>` : ''}
+                    ${precip > 10 ? `<div class="day-precip">${precip}% precip${precipIn >= 0.05 ? ` · ${precipIn.toFixed(2)}"` : ''}</div>` : ''}
                 </div>`;
         }
-
-        // 7-day snowfall total
-        const week7Snow = daily.snowfall_sum.slice(T, T + 7).reduce((a, b) => a + (b || 0), 0);
 
         // Visibility
         const visStr = cur.visibility != null
@@ -1807,219 +1576,70 @@
                 : Math.round(cur.visibility) + ' m')
             : '–';
 
-        // ── 5-Day Ski Summary ─────────────────────────────────────────────────
-        // Track rolling estimated base depth across days
-        let rollingDepth = snowDepthIn;
-        let skiSummaryHtml = '';
-        for (let i = T; i < T + 5; i++) {
-            const d    = new Date(daily.time[i] + 'T12:00:00');
-            const dName = i === T ? 'Today' : i === T + 1 ? 'Tmrw' : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
-            const dDate = `${d.getMonth()+1}/${d.getDate()}`;
-            const sn    = daily.snowfall_sum[i] || 0;
-            const tMax  = daily.temperature_2m_max[i];
-            const tMin  = daily.temperature_2m_min[i];
-            const wind  = daily.wind_speed_10m_max[i] || 0;
-            const prob  = daily.precipitation_probability_max[i] || 0;
-            const code  = daily.weather_code[i];
-            const w     = wmo(code);
-
-            // Update rolling depth: add snow, subtract melt (rough estimate)
-            if (i > T) {
-                const melt = tMax > 34 ? Math.min(rollingDepth, (tMax - 34) * 0.5) : 0;
-                rollingDepth = Math.max(0, rollingDepth + sn - melt);
-            }
-
-            const score  = skiScore(tMax, sn, wind, prob, code, rollingDepth);
-            const rating = skiRating(score);
-            const snLine = sn >= 0.1
-                ? `<span style="color:#38bdf8">❄️ ${sn.toFixed(1)}" new snow</span>`
-                : `<span class="ski-snow-none">No new snow</span>`;
-
-            skiSummaryHtml += `
-                <div class="ski-day ${rating.cls} ${i === 0 ? 'ski-today' : ''}">
-                    <div class="ski-day-name">${dName}</div>
-                    <div class="ski-day-date">${dDate}</div>
-                    <div class="ski-day-icon">${w.icon}</div>
-                    <div class="ski-rating-pill ${rating.pill}">${rating.label}</div>
-                    <div class="ski-temps">
-                        <span class="ski-hi">${fmt(tMax)}</span>
-                        <span class="ski-lo"> / ${fmt(tMin)}</span>
-                    </div>
-                    <div class="ski-snow-line">${snLine}</div>
-                    ${trailHTML(score)}
-                    <div class="ski-note">${rating.note}</div>
-                </div>`;
-        }
-        // ─────────────────────────────────────────────────────────────────────
-
         document.getElementById('content').innerHTML = `
-            ${alertHtml}
-
-            <div class="cc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;align-items:stretch">
-
-                <!-- Col 1: Temperature -->
-                <div class="card" style="box-sizing:border-box">
-                    <div class="card-title">🌡️ Current Conditions</div>
-                    <div class="temp-display">
-                        ${(() => {
-                            const t = cur.temperature_2m;
-                            const diff = cur.apparent_temperature - 32;
-                            if (diff < 0) {
-                                const intensity = Math.min(1, Math.abs(diff) / 40);
-                                const dur = Math.max(0.08, 0.35 - intensity * 0.27).toFixed(3);
-                                const col = `rgb(${Math.round(180 - intensity * 110)},${Math.round(220 - intensity * 80)},255)`;
-                                return `<div id="temp-sweat-wrap" style="position:relative;display:inline-block"><div class="temp-big temp-shiver" style="--ti:${intensity.toFixed(3)};--td:${dur};color:${col}">${Math.round(t)}</div></div>`;
-                            } else if (diff > 0) {
-                                const intensity = Math.min(1, diff / 40);
-                                const pulDur = Math.max(0.5, 2.8 - intensity * 2.3).toFixed(2);
-                                const g = Math.max(50, Math.round(255 - intensity * 205));
-                                const b = Math.max(50, Math.round(255 - intensity * 215));
-                                const col = `rgb(255,${g},${b})`;
-                                return `<div id="temp-sweat-wrap" style="position:relative;display:inline-block"><div class="temp-big temp-pulse" style="--ti:${intensity.toFixed(3)};--td:${pulDur};color:${col}">${Math.round(t)}</div></div>`;
-                            }
-                            return `<div id="temp-sweat-wrap" style="position:relative;display:inline-block"><div class="temp-big">${Math.round(t)}</div></div>`;
-                        })()}
-                        <div class="temp-unit">°F</div>
-                    </div>
-                    ${(() => {
-                        const t = Math.round(cur.temperature_2m);
-                        const desc = t >= 85 ? 'Skis Are Literally Melting' : t >= 75 ? 'Sir, This Is a Ski Resort' : t >= 65 ? 'Moguls Are Now Puddles' : t >= 55 ? 'Jacket Died of Heat Stroke' : t >= 45 ? 'Mud Season Is Calling' : t >= 38 ? 'Snow Is Getting Suspicious' : t >= 32 ? 'Chef\'s Kiss Ski Temp' : t >= 25 ? 'Cheeks Getting Rosy' : t >= 15 ? 'Goggles Are Not Optional' : t >= 5 ? 'Every Breath Is a Mistake' : t >= -5 ? 'Snot Freezes Instantly' : t >= -15 ? 'Legally Should Not Exist' : 'Actual Surface of Mars';
-                        const col = cur.apparent_temperature - 32 < 0 ? `rgb(${Math.round(180 - Math.min(1,Math.abs(cur.apparent_temperature-32)/40)*110)},${Math.round(220 - Math.min(1,Math.abs(cur.apparent_temperature-32)/40)*80)},255)` : cur.apparent_temperature - 32 > 0 ? `rgb(255,${Math.max(50,Math.round(255-Math.min(1,(cur.apparent_temperature-32)/40)*205))},${Math.max(50,Math.round(255-Math.min(1,(cur.apparent_temperature-32)/40)*215))})` : 'white';
-                        return `<div style="font-size:0.95rem;font-weight:300;color:${col};opacity:0.85;line-height:1;margin-top:0.2rem;margin-bottom:0.1rem">${desc}</div>`;
-                    })()}
-                    <div class="weather-condition">${wi.icon} ${wi.ski}</div>
-                    <div class="feels-like">Feels like ${fmt(cur.apparent_temperature)}F &nbsp;·&nbsp; Humidity ${cur.relative_humidity_2m}% &nbsp;·&nbsp; Vis ${visStr}</div>
-                    <div class="condition-badge ${badge.cls}">${badge.icon} ${badge.label}</div>
-                    <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.4rem">
-                        <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
-                            <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">High/Low</div>
-                            <div style="font-size:0.78rem;color:white;font-weight:600">${fmt(daily.temperature_2m_max[T])}/${fmt(daily.temperature_2m_min[T])}</div>
-                        </div>
-                        <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
-                            <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">Precip</div>
-                            <div style="font-size:0.78rem;color:white;font-weight:600">${daily.precipitation_probability_max[T]}%</div>
-                        </div>
-                        <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
-                            <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">New Snow</div>
-                            <div style="font-size:0.78rem;font-weight:600;color:${todaySnow >= 0.1 ? '#38bdf8' : 'white'}">${todaySnow >= 0.1 ? todaySnow.toFixed(1) + '"' : 'None'}</div>
-                        </div>
-                    </div>
-                    <div style="margin-top:0.4rem;display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
-                        <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
-                            <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">Sunrise</div>
-                            <div style="font-size:0.78rem;color:white;font-weight:600">${fmtTime(daily.sunrise[T])}</div>
-                        </div>
-                        <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
-                            <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">Sunset</div>
-                            <div style="font-size:0.78rem;color:white;font-weight:600">${fmtTime(daily.sunset[T])}</div>
-                        </div>
-                    </div>
-                    ${(() => {
-                        const w = cur.wind_speed_10m || 0;
-                        const dur = Math.max(0.5, 3 - w * 0.055).toFixed(2);
-                        const g = Math.max(70, Math.round(255 - w * 4.5));
-                        const b = Math.max(70, Math.round(255 - w * 6));
-                        const col = w < 5 ? 'white' : `rgb(255,${g},${b})`;
-                        const cls = w < 5 ? 'wind-big' : 'wind-big wind-animated';
-                        const windDesc = w === 0 ? 'Eerily Still' : w < 5 ? 'Your Hat Is Safe' : w < 10 ? 'Hair Slightly Ruffled' : w < 16 ? 'Scarves Optional' : w < 22 ? 'Blustery' : w < 29 ? 'Hold Your Hat' : w < 35 ? 'Goggles Required' : w < 44 ? 'Chairlift Getting Spicy' : w < 52 ? 'Face Hurts a Little' : w < 62 ? 'Sent Someone\'s Helmet to Canada' : 'Do Not Go Outside';
-                        const moon = getMoonPhase();
-                        return `<div style="margin-top:0.75rem;border-top:1px solid rgba(255,255,255,0.07);padding-top:0.65rem">
-                            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:#567a96;margin-bottom:0.5rem">💨 Wind &amp; Sky</div>
-                            <div style="display:flex;align-items:baseline;gap:0.6rem;flex-wrap:wrap">
-                                <div class="${cls}" style="color:${col};${w >= 5 ? `--ws:${w};--wd:${dur}` : ''}">${Math.round(w)}<span class="wind-unit">mph</span></div>
-                                <div style="font-size:1rem;font-weight:300;color:${col};opacity:0.85;line-height:1">${windDesc}</div>
-                            </div>
-                            <div class="irow"><span class="stat-label">Direction</span><span class="stat-value">${windArrow(cur.wind_direction_10m)} ${windDir(cur.wind_direction_10m)}</span></div>
-                            <div class="irow"><span class="stat-label">Gusts</span><span class="stat-value">${Math.round(cur.wind_gusts_10m)} mph</span></div>
-                            <div class="irow"><span class="stat-label">Today's Max</span><span class="stat-value">${Math.round(daily.wind_speed_10m_max[T])} mph</span></div>
-                            <div class="irow"><span class="stat-label">Moon</span><span class="stat-value">${moon.emoji} ${moon.name} · ${moon.illumination}%</span></div>
-                            <div class="irow"><span class="stat-label">Next Full</span><span class="stat-value">🌕 ${moon.nextFull}</span></div>
-                            <div class="irow"><span class="stat-label">Next New</span><span class="stat-value">🌑 ${moon.nextNew}</span></div>
-                        </div>`;
-                    })()}
+            <div class="card" style="box-sizing:border-box;margin-bottom:1rem">
+                <div class="card-title">🌡️ Current Conditions — Crystal Mountain Base</div>
+                <div class="temp-display">
+                    <div class="temp-big">${Math.round(cur.temperature_2m)}</div>
+                    <div class="temp-unit">°F</div>
                 </div>
-
-                <!-- Col 2: Snow Report -->
-                <div class="card" style="box-sizing:border-box">
-                    <div class="card-title">❄️ Snow Report</div>
-                    ${(() => {
-                        const sr = _sbLive && _sbLive.SnowReport;
-                        const baseIn    = sr ? parseInt(sr.BaseArea?.BaseIn)    || 0 : Math.round(snowDepthIn * 0.4);
-                        const summitIn  = sr ? parseInt(sr.SummitArea?.BaseIn)  || 0 : Math.round(snowDepthIn);
-                        const new24base = sr ? parseFloat(sr.BaseArea?.Last24HoursIn)   || 0 : todaySnow;
-                        const new24sum  = sr ? parseFloat(sr.SummitArea?.Last24HoursIn) || 0 : todaySnow;
-                        const new48sum  = sr ? parseFloat(sr.SummitArea?.Last48HoursIn) || 0 : 0;
-                        const stormIn   = sr ? parseFloat(sr.StormTotalIn) || 0 : 0;
-                        const surface   = sr ? sr.BaseConditions || '' : '';
-                        const maxBar = Math.max(summitIn, 60);
-                        const basePct   = Math.round(baseIn   / maxBar * 100);
-                        const summitPct = Math.round(summitIn / maxBar * 100);
-                        return `
-                        <div style="margin-bottom:0.9rem">
-                            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.35rem">
-                                <span style="font-size:2rem;font-weight:700;color:white;line-height:1">${baseIn}"</span>
-                                <span style="font-size:0.62rem;color:#90cdf4">base — summit</span>
-                                <span style="font-size:2rem;font-weight:700;color:white;line-height:1">${summitIn}"</span>
-                            </div>
-                            <div style="position:relative;height:10px;background:rgba(255,255,255,0.07);border-radius:6px;overflow:hidden">
-                                <div style="position:absolute;left:0;top:0;height:100%;width:${basePct}%;background:rgba(56,189,248,0.35);border-radius:6px"></div>
-                                <div style="position:absolute;left:0;top:0;height:100%;width:${summitPct}%;background:linear-gradient(90deg,rgba(56,189,248,0.6),rgba(147,210,255,0.9));border-radius:6px"></div>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;margin-top:0.2rem">
-                                <span style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:1px">Base</span>
-                                <span style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:1px">Summit</span>
-                            </div>
-                            ${surface ? `<div style="font-size:0.62rem;color:#90cdf4;margin-top:0.3rem;text-align:center">${surface}</div>` : ''}
-                        </div>
-                        <div class="snow-grid">
-                            <div class="snow-stat"><div class="snow-val">${new24sum > 0 ? new24sum.toFixed(1) + '"' : '—'}</div><div class="snow-lbl">24hr Summit</div></div>
-                            <div class="snow-stat"><div class="snow-val">${new24base > 0 ? new24base.toFixed(1) + '"' : '—'}</div><div class="snow-lbl">24hr Base</div></div>
-                            <div class="snow-stat"><div class="snow-val">${new48sum > 0 ? new48sum.toFixed(1) + '"' : '—'}</div><div class="snow-lbl">48hr Summit</div></div>
-                            <div class="snow-stat"><div class="snow-val">${stormIn > 0 ? stormIn + '"' : next24Snow >= 0.1 ? next24Snow.toFixed(1) + '"' : '—'}</div><div class="snow-lbl">${stormIn > 0 ? 'Storm Total' : 'Next 24hr Fcst'}</div></div>
-                        </div>
-                        <div id="season-snow-tracker">${_loadingHtml('Season data…')}</div>
-                        ${(() => {
-                            const sparkDays = 11, sparkStart = 0;
-                            const sparkData = [];
-                            for (let i = sparkStart; i < sparkStart + sparkDays && i < daily.snowfall_sum.length; i++) {
-                                const d = new Date(daily.time[i]);
-                                const snow = daily.snowfall_sum[i] || 0;
-                                const dayLabel = i === T ? 'Today' : ['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()];
-                                sparkData.push({ snow, isPast: i < T, isToday: i === T, isFcst: i > T, dayLabel, dayNum: `${d.getMonth()+1}/${d.getDate()}` });
-                            }
-                            const maxSnow = Math.max(...sparkData.map(d => d.snow), 1);
-                            const chartH = 16, barW = 6, gap = 2;
-                            const totalW = sparkData.length * (barW + gap) - gap;
-                            const bars = sparkData.map((d, xi) => {
-                                const x = xi * (barW + gap);
-                                const barH = Math.max(d.snow > 0 ? 2 : 0, Math.round(d.snow / maxSnow * chartH));
-                                const y = chartH - barH;
-                                const col = d.isToday ? '#38bdf8' : d.isFcst ? 'rgba(147,210,255,0.55)' : d.snow > 0 ? 'rgba(56,189,248,0.5)' : 'rgba(255,255,255,0.06)';
-                                const label = d.snow >= 0.1 ? d.snow.toFixed(1) + '"' : '';
-                                return `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="1.5" fill="${col}"/>` +
-                                    (label ? `<text x="${x+barW/2}" y="${y-1.5}" text-anchor="middle" font-size="2.0" fill="${d.isToday?'#38bdf8':d.isFcst?'#90cdf4':'#567a96'}">${label}</text>` : '') +
-                                    `<text x="${x+barW/2}" y="${chartH+6}" text-anchor="middle" font-size="2.0" fill="${d.isToday?'#38bdf8':d.isFcst?'#90cdf4':'#4a6a82'}">${d.dayLabel}</text>` +
-                                    `<text x="${x+barW/2}" y="${chartH+11}" text-anchor="middle" font-size="2.0" fill="${d.isToday?'#38bdf8':d.isFcst?'#7ec8e3':'#334d60'}">${d.dayNum}</text>`;
-                            }).join('');
-                            const divX = T * (barW + gap) + barW + gap/2;
-                            const totalSnow7d = sparkData.filter(d => d.isPast || d.isToday).reduce((a,b) => a + b.snow, 0);
-                            return `<div style="margin-top:0.9rem;border-top:1px solid rgba(255,255,255,0.07);padding-top:0.8rem">
-                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
-                                    <span style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.06em;color:#567a96">7-Day Snowfall</span>
-                                    <span style="font-size:0.62rem;color:#38bdf8">${totalSnow7d >= 0.1 ? totalSnow7d.toFixed(1)+'" past 7 days' : 'No snow past 7 days'}</span>
-                                </div>
-                                <svg width="100%" viewBox="0 0 ${totalW} ${chartH+16}" style="overflow:visible;display:block">
-                                    <line x1="${divX}" y1="0" x2="${divX}" y2="${chartH}" stroke="rgba(255,255,255,0.12)" stroke-width="0.5" stroke-dasharray="2,2"/>
-                                    ${bars}
-                                    <text x="${divX+1}" y="4" font-size="2.0" fill="rgba(255,255,255,0.25)">Forecast</text>
-                                </svg>
-                            </div>`;
-                        })()}`;
-                    })()}
+                ${(() => {
+                    const t = Math.round(cur.temperature_2m);
+                    const desc = t >= 90 ? 'Hot — Ride the Gondola for the Cool Air'
+                        : t >= 80 ? 'Warm — Perfect for the Deck at Bullwheel'
+                        : t >= 70 ? 'Mild &amp; Sunny — Hike or Bike Weather'
+                        : t >= 60 ? 'Cool — Light Layer Recommended'
+                        : t >= 50 ? 'Brisk — Worth a Jacket'
+                        : t >= 40 ? 'Chilly — Layer Up on the Summit'
+                        : t >= 32 ? 'Cold — Frost on the High Peaks'
+                        : 'Below Freezing — Shoulder-Season Cold';
+                    return `<div style="font-size:0.95rem;font-weight:300;color:#90cdf4;opacity:0.85;line-height:1;margin-top:0.2rem;margin-bottom:0.1rem">${desc}</div>`;
+                })()}
+                <div class="weather-condition">${wi.icon} ${wi.ski}</div>
+                <div class="feels-like">Feels like ${fmt(cur.apparent_temperature)}F &nbsp;·&nbsp; Humidity ${cur.relative_humidity_2m}% &nbsp;·&nbsp; Vis ${visStr}</div>
+                <div class="condition-badge ${badge.cls}">${badge.icon} ${badge.label}</div>
+                <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.4rem">
+                    <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
+                        <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">High/Low</div>
+                        <div style="font-size:0.78rem;color:white;font-weight:600">${fmt(daily.temperature_2m_max[T])}/${fmt(daily.temperature_2m_min[T])}</div>
+                    </div>
+                    <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
+                        <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">Precip Chance</div>
+                        <div style="font-size:0.78rem;color:white;font-weight:600">${daily.precipitation_probability_max[T]}%</div>
+                    </div>
+                    <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
+                        <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">Sunrise</div>
+                        <div style="font-size:0.78rem;color:white;font-weight:600">${fmtTime(daily.sunrise[T])}</div>
+                    </div>
+                    <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
+                        <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">Sunset</div>
+                        <div style="font-size:0.78rem;color:white;font-weight:600">${fmtTime(daily.sunset[T])}</div>
+                    </div>
                 </div>
-
+                ${(() => {
+                    const w = cur.wind_speed_10m || 0;
+                    const dur = Math.max(0.5, 3 - w * 0.055).toFixed(2);
+                    const g = Math.max(70, Math.round(255 - w * 4.5));
+                    const b = Math.max(70, Math.round(255 - w * 6));
+                    const col = w < 5 ? 'white' : `rgb(255,${g},${b})`;
+                    const cls = w < 5 ? 'wind-big' : 'wind-big wind-animated';
+                    const windDesc = w === 0 ? 'Still' : w < 5 ? 'Light' : w < 10 ? 'Breezy' : w < 16 ? 'Moderate' : w < 22 ? 'Blustery' : w < 29 ? 'Hold Your Hat' : w < 35 ? 'Strong Gusts' : w < 44 ? 'Spicy on the Ridge' : 'Stay Off Exposed Ridges';
+                    const moon = getMoonPhase();
+                    return `<div style="margin-top:0.75rem;border-top:1px solid rgba(255,255,255,0.07);padding-top:0.65rem">
+                        <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:#567a96;margin-bottom:0.5rem">💨 Wind &amp; Sky</div>
+                        <div style="display:flex;align-items:baseline;gap:0.6rem;flex-wrap:wrap">
+                            <div class="${cls}" style="color:${col};${w >= 5 ? `--ws:${w};--wd:${dur}` : ''}">${Math.round(w)}<span class="wind-unit">mph</span></div>
+                            <div style="font-size:1rem;font-weight:300;color:${col};opacity:0.85;line-height:1">${windDesc}</div>
+                        </div>
+                        <div class="irow"><span class="stat-label">Direction</span><span class="stat-value">${windArrow(cur.wind_direction_10m)} ${windDir(cur.wind_direction_10m)}</span></div>
+                        <div class="irow"><span class="stat-label">Gusts</span><span class="stat-value">${Math.round(cur.wind_gusts_10m)} mph</span></div>
+                        <div class="irow"><span class="stat-label">Today's Max</span><span class="stat-value">${Math.round(daily.wind_speed_10m_max[T])} mph</span></div>
+                        <div class="irow"><span class="stat-label">Moon</span><span class="stat-value">${moon.emoji} ${moon.name} · ${moon.illumination}%</span></div>
+                        <div class="irow"><span class="stat-label">Next Full</span><span class="stat-value">🌕 ${moon.nextFull}</span></div>
+                        <div class="irow"><span class="stat-label">Next New</span><span class="stat-value">🌑 ${moon.nextNew}</span></div>
+                    </div>`;
+                })()}
             </div>
-
         `;
 
         document.getElementById('daily-outlook').innerHTML = `
@@ -2028,16 +1648,6 @@
                 <div class="hourly-wrap">
                     <div class="hourly-row">${hourlyHtml}</div>
                 </div>
-                <div class="section-header" style="margin-top:1rem">🎿 5-Day Ski Conditions Summary</div>
-                <div class="trail-legend">
-                    <span style="color:#7ec8e3; font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Trail Ratings:</span>
-                    <span class="legend-item"><span class="leg-green"></span> Beginner</span>
-                    <span class="legend-item"><span class="leg-blue"></span> Intermediate</span>
-                    <span class="legend-item"><span class="leg-black"></span> Advanced</span>
-                    <span class="legend-item"><span class="leg-dbl"><span class="leg-dbl-d"></span><span class="leg-dbl-d"></span></span> Expert</span>
-                    <span style="color:#3d6680; margin-left:auto; font-size:0.6rem">Filled = recommended &nbsp;·&nbsp; Dim = skiable with caution</span>
-                </div>
-                <div class="ski-summary">${skiSummaryHtml}</div>
                 <div class="section-header" style="margin-top:1rem">📅 ${daily.time.length}-Day Outlook</div>
                 <div class="daily-grid">${dailyHtml}</div>
             </div>`;
@@ -2045,35 +1655,7 @@
 
     let _sbLive = null; // latest mtnpowder Crystal Mountain data, shared with render()
 
-    // ── Steam Spawner ─────────────────────────────────────────────────────
-    let _steamTimer = null;
-    function startSteam(intensity) {
-        if (_steamTimer) { clearInterval(_steamTimer); _steamTimer = null; }
-        if (intensity <= 0) return;
-        const spawnMs = Math.max(60, 700 - intensity * 640);
-        _steamTimer = setInterval(() => {
-            const wrap = document.getElementById('temp-sweat-wrap');
-            if (!wrap) { clearInterval(_steamTimer); _steamTimer = null; return; }
-            const batch = Math.ceil(1 + intensity * 2.5);
-            for (let i = 0; i < batch; i++) {
-                const puff = document.createElement('div');
-                puff.className = 'steam-puff';
-                const size = Math.round(10 + intensity * 24 + Math.random() * 14);
-                const dur  = (1.1 + Math.random() * 1.4).toFixed(2);
-                const x    = Math.random() * Math.max(4, wrap.offsetWidth - size);
-                const ht   = Math.round(55 + intensity * 45 + Math.random() * 20);
-                const wx   = (Math.random() * 2 - 1).toFixed(2); // -1 to 1 lateral drift
-                puff.style.cssText = `width:${size}px;height:${size}px;left:${x}px;bottom:90%;--st-dur:${dur}s;--st-ht:${ht};--st-wx:${wx}`;
-                wrap.appendChild(puff);
-                puff.addEventListener('animationend', () => puff.remove(), { once: true });
-            }
-        }, spawnMs);
-    }
-    function stopSteam() {
-        if (_steamTimer) { clearInterval(_steamTimer); _steamTimer = null; }
-        const wrap = document.getElementById('temp-sweat-wrap');
-        if (wrap) wrap.querySelectorAll('.steam-puff').forEach(p => p.remove());
-    }
+    // (Steam spawner removed — temperature animations gone with the snow theme)
 
     // ── Lift & Trail Status ───────────────────────────────────────────────
     const TRAILS = {
@@ -5356,6 +4938,178 @@
         renderCarousel();
     }
 
+    // ── Home page — Summer Activities summary ────────────────────────────
+    // Tiles summarize crystalmountainresort.com summer activities. Each tile is
+    // a click target — most route into the in-app Summer Activities page
+    // (`navigateTo('winter')`) for the curated detail; "Tickets / Book" buttons
+    // link out to crystalmountainresort.com.
+    const HOME_ACTIVITIES = [
+        {
+            emoji: '🎢',
+            title: 'Flying Raven Aerial Adventure',
+            tag: 'Featured · New for Summer',
+            tagCls: 'pill-powder',
+            desc: "Crystal's brand-new aerial ropes course — cable-belayed bridges, ladders, swings, zip-lines and free-fall elements set in the trees beside the base village. Three difficulty levels so kids and first-timers climb alongside thrill-seekers.",
+            ctas: [
+                { label: 'Book a session ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer/flying-raven-aerial-adventure', primary: true },
+                { label: 'Details', route: 'winter' },
+            ],
+            img: 'https://images.unsplash.com/photo-1517823382935-51bfcb0ec6bc?auto=format&fit=crop&w=900&q=70',
+        },
+        {
+            emoji: '🚠',
+            title: 'Mt. Rainier Gondola',
+            tag: 'Scenic Ride',
+            tagCls: 'pill-good',
+            desc: "Eight-passenger gondola climbs 2,400 vertical feet to the Summit House at 6,872 ft — Washington's highest restaurant. Open-air, all-direction views of Mt. Rainier and the Cascades. Ride round-trip or download after a summit hike.",
+            ctas: [
+                { label: 'Tickets ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer/mt-rainier-gondola', primary: true },
+                { label: 'Details', route: 'winter' },
+            ],
+            img: 'https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=900&q=70',
+        },
+        {
+            emoji: '🥾',
+            title: 'Hiking',
+            tag: 'On-Mountain + NP Access',
+            tagCls: 'pill-fresh',
+            desc: "Top picks: Bullion Basin (4.8 mi wildflower loop), Henskin Lake (2.6 mi family hike), Crystal Lakes Trail (6 mi), Northway Trail to Bear Gap. Naches Peak Loop in Mt Rainier NP just up the road is the classic wildflower walk.",
+            ctas: [
+                { label: 'Trail info ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer/hiking', primary: true },
+                { label: 'Details', route: 'winter' },
+            ],
+            img: 'https://images.unsplash.com/photo-1469125155630-7ed37e065743?auto=format&fit=crop&w=900&q=70',
+        },
+        {
+            emoji: '🚵',
+            title: 'Lift-Served Mountain Biking',
+            tag: 'Bike Park · Fri–Sun',
+            tagCls: 'pill-good',
+            desc: "Lift-served downhill via the Forest Queen chair — flowy intermediate trails through old-growth fir plus steeper expert lines off the ridge. Full-suspension rentals at the base. Trail maps + weekend clinics for first lift-served laps.",
+            ctas: [
+                { label: 'Bike park info ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer/mountain-biking', primary: true },
+                { label: 'Details', route: 'winter' },
+            ],
+            img: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=70',
+        },
+        {
+            emoji: '🥏',
+            title: 'Disc Golf',
+            tag: 'Free · Family-Friendly',
+            tagCls: 'pill-fair',
+            desc: "Free 18-hole course threading the village and lower trail network. Mix of wooded technical holes and big open mountain shots. Loaner discs &amp; scorecards at the village shop.",
+            ctas: [
+                { label: 'Course info ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer', primary: true },
+            ],
+            img: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=70',
+        },
+        {
+            emoji: '🏔',
+            title: 'Summit House Dining',
+            tag: 'WA\'s Highest Restaurant',
+            tagCls: 'pill-powder',
+            desc: "Sit-down PNW dining at 6,872 ft with a panoramic, edge-of-the-world view of Rainier. NW seafood, charcuterie, big salads, signature burgers, WA wine list. Look for the summer Sunset Dinner Series.",
+            ctas: [
+                { label: 'Menu &amp; reservations ↗', href: 'https://www.crystalmountainresort.com/dining/summit-house', primary: true },
+                { label: 'See all dining', route: 'food' },
+            ],
+            img: 'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=900&q=70',
+        },
+        {
+            emoji: '🏞',
+            title: 'Mt. Rainier National Park',
+            tag: '10–25 min · Sunrise &amp; Tipsoo',
+            tagCls: 'pill-good',
+            desc: "Crystal sits on the doorstep of America's 5th-oldest national park. Drive ~20 min to Tipsoo Lake + the Naches Peak Loop (mirror reflection of Rainier), or ~40 min up to Sunrise — the highest road in the park at 6,400 ft.",
+            ctas: [
+                { label: 'NPS site ↗', href: 'https://www.nps.gov/mora/', primary: true },
+                { label: 'Details', route: 'winter' },
+            ],
+            img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=70',
+        },
+        {
+            emoji: '🚗',
+            title: 'Chinook Pass Scenic Byway',
+            tag: 'SR-410 · Open ~late May – mid-Nov',
+            tagCls: 'pill-fair',
+            desc: "One of the most scenic drives in the country — SR-410 east of Crystal climbs through alpine meadows to Chinook Pass (5,432 ft), past Tipsoo Lake, then over Cayuse Pass to Yakima. Wildflowers peak late July – early August.",
+            ctas: [
+                { label: 'WSDOT pass status ↗', href: 'https://wsdot.com/travel/real-time/mountainpasses/snoqualmie', primary: true },
+                { label: 'Driving routes', route: 'btv' },
+            ],
+            img: 'https://images.unsplash.com/photo-1486500664569-09a82b29b65c?auto=format&fit=crop&w=900&q=70',
+        },
+        {
+            emoji: '🎟',
+            title: 'Plan Your Visit',
+            tag: 'Tickets · Lodging · Events',
+            tagCls: 'pill-good',
+            desc: "Crystal Mountain Resort's official planning portal — gondola tickets, ropes course slots, lodging, summer events calendar, hours of operation. Open-air shuttle from village to trailheads on busy weekends.",
+            ctas: [
+                { label: 'crystalmountainresort.com ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer', primary: true },
+                { label: 'Upcoming events', route: 'events' },
+            ],
+            img: 'https://images.unsplash.com/photo-1454942901704-3c44c11b2ad1?auto=format&fit=crop&w=900&q=70',
+        },
+    ];
+
+    function renderHome() {
+        const el = document.getElementById('home-content');
+        if (!el) return;
+
+        const tileHtml = HOME_ACTIVITIES.map(a => {
+            const ctaHtml = a.ctas.map(c => {
+                const base = 'display:inline-block;font-size:0.78rem;font-weight:600;padding:0.45rem 0.95rem;border-radius:8px;text-decoration:none;margin:0.2rem 0.4rem 0 0';
+                if (c.route) {
+                    return `<a href="#" onclick="event.preventDefault();navigateTo('${c.route}')" style="${base};background:rgba(255,255,255,0.07);color:#90cdf4;border:1px solid rgba(255,255,255,0.12)">${c.label}</a>`;
+                }
+                const style = c.primary
+                    ? `${base};background:#38bdf8;color:#0a1628`
+                    : `${base};background:rgba(255,255,255,0.07);color:#90cdf4;border:1px solid rgba(255,255,255,0.12)`;
+                return `<a href="${c.href}" target="_blank" rel="noopener" style="${style}">${c.label}</a>`;
+            }).join('');
+
+            return `
+                <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+                    <div style="position:relative;aspect-ratio:16/9;background:#0a1f38">
+                        <img src="${a.img}" alt="${a.title}" loading="lazy"
+                             style="width:100%;height:100%;object-fit:cover;display:block"
+                             onerror="this.style.display='none'">
+                        <div style="position:absolute;top:0.6rem;left:0.6rem;background:rgba(7,21,35,0.7);backdrop-filter:blur(4px);border-radius:6px;padding:0.2rem 0.55rem;font-size:0.6rem;color:#7ec8e3;text-transform:uppercase;letter-spacing:1px">${a.tag}</div>
+                        <div style="position:absolute;top:0.6rem;right:0.7rem;font-size:1.4rem">${a.emoji}</div>
+                    </div>
+                    <div style="padding:1rem 1.15rem;display:flex;flex-direction:column;gap:0.45rem;flex:1">
+                        <div style="font-size:1.05rem;font-weight:700;color:white;letter-spacing:-0.2px">${a.title}</div>
+                        <div style="font-size:0.82rem;color:#c8dce8;line-height:1.5">${a.desc}</div>
+                        <div style="margin-top:auto;padding-top:0.65rem">${ctaHtml}</div>
+                    </div>
+                </div>`;
+        }).join('');
+
+        el.innerHTML = `
+            <div class="powder-alert" style="background:linear-gradient(90deg, rgba(56,189,248,0.15), rgba(34,197,94,0.12));border-color:rgba(56,189,248,0.35);margin-bottom:1.25rem">
+                <div class="powder-alert-badge" style="font-size:2.4rem;animation:none">🏔️</div>
+                <div style="flex:1">
+                    <div class="powder-alert-text" style="color:#86efac">Summer at Crystal Mountain</div>
+                    <div class="powder-alert-sub" style="color:#a7f3d0">Gondola, ropes course, hiking, lift-served biking and the closest base camp to Mt. Rainier National Park. Ski season returns in November.</div>
+                </div>
+                <div style="display:flex;gap:0.4rem;flex-shrink:0">
+                    <button onclick="navigateTo('weather')" style="background:rgba(255,255,255,0.1);color:#e0eef8;border:1px solid rgba(255,255,255,0.18);font-size:0.75rem;font-weight:600;padding:0.5rem 0.9rem;border-radius:8px;cursor:pointer">🌤️ Today's Weather</button>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem">
+                ${tileHtml}
+            </div>
+
+            <div class="card" style="text-align:center;padding:1.25rem 1.5rem">
+                <div style="font-size:0.9rem;color:#90cdf4;line-height:1.5;margin-bottom:0.6rem">
+                    🎒 Looking for trail logistics, mountain biking trail status, or the bike-park schedule?
+                </div>
+                <a href="#" onclick="event.preventDefault();navigateTo('winter')" style="display:inline-block;background:#38bdf8;color:#0a1628;font-weight:700;font-size:0.85rem;padding:0.55rem 1.2rem;border-radius:8px;text-decoration:none">All Summer Activities →</a>
+            </div>`;
+    }
+
     function renderCarousel() {
         const wrap = document.getElementById('photo-carousel-wrap');
         if (!wrap || activePhotos.length === 0) return;
@@ -5535,57 +5289,10 @@
             renderWinter();
             winterRendered = true;
         }
-        if (page === 'report') {
-            fetchAndRenderMountainReport();
-        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // ── Mountain Report ───────────────────────────────────────────────────
-    function _sanitizeHtml(html) {
-        // Strip tags that could execute code or cause layout issues
-        return html
-            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-            .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-            .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '');
-    }
-
-    async function fetchAndRenderMountainReport() {
-        const container = document.getElementById('report-content');
-        container.innerHTML = _loadingHtml('Loading mountain report…');
-        try {
-            // mtnfeed.com publishes resort condition reports keyed by slug; the
-            // Crystal Mountain WA slug is `crystal`. If unavailable the catch below
-            // surfaces a friendly fallback that links directly to the resort site.
-            const res = await fetch('https://api.mtnfeed.com/crystal');
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const data = await res.json();
-            const report = data.SnowReport && data.SnowReport.Report;
-            const lastUpdate = data.LastUpdate || (data.SnowReport && data.SnowReport.LastUpdate) || '';
-            if (!report || report === '--' || report.trim() === '') {
-                container.innerHTML = `<div class="card" style="margin-top:1rem">
-                    <p style="color:#567a96;font-size:0.9rem">No mountain report available right now (summer ops — winter conditions report returns in November).
-                    <a href="https://www.crystalmountainresort.com/the-mountain/conditions" target="_blank" rel="noopener" style="color:#38bdf8">Check crystalmountainresort.com ↗</a></p>
-                </div>`;
-                return;
-            }
-            const updated = lastUpdate ? `<div style="font-size:0.7rem;color:#567a96;margin-bottom:1.25rem;text-transform:uppercase;letter-spacing:1px">Last updated: ${lastUpdate}</div>` : '';
-            container.innerHTML = `
-                <div class="card" style="margin-top:1rem;max-width:760px">
-                    ${updated}
-                    <div class="mountain-report-body">${_sanitizeHtml(report)}</div>
-                    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.08);font-size:0.72rem;color:#3d6680">
-                        Source: <a href="https://www.crystalmountainresort.com/the-mountain/conditions" target="_blank" rel="noopener" style="color:#38bdf8">crystalmountainresort.com/the-mountain/conditions</a>
-                    </div>
-                </div>`;
-        } catch(e) {
-            container.innerHTML = `<div class="card" style="margin-top:1rem">
-                <p style="color:#f87171;font-size:0.85rem">Could not load mountain report — ${e.message}</p>
-                <p style="margin-top:0.5rem"><a href="https://www.crystalmountainresort.com/the-mountain/conditions" target="_blank" rel="noopener" style="color:#38bdf8">View on crystalmountainresort.com ↗</a></p>
-            </div>`;
-        }
-    }
+    // (Mountain Report page removed — summer-first site)
 
     // ───────────────────────────────────────────────────────────────────────
 
@@ -5743,7 +5450,6 @@
         renderLiftTrails(container, sb, errMsg);
         buildTicker(sb);
         if (foodRendered) renderFood();
-        fetchSeasonSnow();
     }
 
     // Set CSS variable for header height so ticker bar sticks just below it
@@ -5756,150 +5462,9 @@
     const _logoImg = document.querySelector('.logo-icon img');
     if (_logoImg) _logoImg.addEventListener('load', syncHeaderHeight);
 
-    // ── Snowfall overlay ──────────────────────────────────────────────────
+    // SNOW_CODES retained for road-conditions surface logic only — visual snow
+    // overlay was removed when the site went summer-first.
     const SNOW_CODES = new Set([71, 73, 75, 77, 85, 86, 68, 69, 79]);
-    const SNOW_INTENSITY = { 71: 0.5, 73: 0.65, 75: 0.9, 77: 0.35, 85: 0.55, 86: 0.85, 68: 0.4, 69: 0.65, 79: 0.45 };
-    let _snowRaf = null;
-    let _snowUserOff = false;   // user manually toggled off
-    let _lastSnowArgs = null;   // last startSnowfall args so toggle can restore
-
-    function toggleSnowOverlay() {
-        _snowUserOff = !_snowUserOff;
-        if (_snowUserOff) {
-            stopSnowfall();
-        } else if (_lastSnowArgs) {
-            startSnowfall(..._lastSnowArgs);
-        }
-        _updateSnowBtn();
-    }
-    function _updateSnowBtn() {
-        const btn = document.getElementById('snow-toggle-btn');
-        if (!btn) return;
-        const isSnowing = !!_lastSnowArgs;
-        btn.style.display = isSnowing ? 'flex' : 'none';
-        btn.className = (isSnowing && !_snowUserOff) ? 'snow-on' : 'snow-off';
-        btn.title = _snowUserOff ? 'Snow effect off — click to enable' : 'Snow effect on — click to disable';
-    }
-    let _snowFlakes = [];
-
-    function _resizeSnow() {
-        const c = document.getElementById('snow-canvas');
-        if (c) { c.width = window.innerWidth; c.height = window.innerHeight; }
-    }
-
-    function _drawCrystal(ctx, x, y, r, rot, opacity) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(rot);
-        ctx.globalAlpha = opacity;
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = Math.max(0.4, r * 0.13);
-        ctx.lineCap = 'round';
-        for (let i = 0; i < 6; i++) {
-            ctx.save();
-            ctx.rotate(i * Math.PI / 3);
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, r); ctx.stroke();
-            // inner branch pair
-            ctx.save(); ctx.translate(0, r * 0.38);
-            ctx.rotate( Math.PI / 4); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0, r*0.28); ctx.stroke(); ctx.restore();
-            ctx.save(); ctx.translate(0, r * 0.38);
-            ctx.rotate(-Math.PI / 4); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0, r*0.28); ctx.stroke(); ctx.restore();
-            // outer branch pair
-            ctx.save(); ctx.translate(0, r * 0.65);
-            ctx.rotate( Math.PI / 4); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0, r*0.20); ctx.stroke(); ctx.restore();
-            ctx.save(); ctx.translate(0, r * 0.65);
-            ctx.rotate(-Math.PI / 4); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0, r*0.20); ctx.stroke(); ctx.restore();
-            ctx.restore();
-        }
-        ctx.restore();
-    }
-
-    function startSnowfall(intensity, windMph, windDirDeg, gustMph) {
-        stopSnowfall();
-        const c = document.getElementById('snow-canvas');
-        if (!c) return;
-        c.width = window.innerWidth;
-        c.height = window.innerHeight;
-        c.style.display = 'block';
-        const ctx = c.getContext('2d');
-
-        // Wind: convert direction (where it blows FROM) to horizontal drift px/frame
-        const windRad = ((windDirDeg || 0) + 180) * Math.PI / 180;
-        const baseWindX = Math.sin(windRad) * (windMph || 0) * 0.32;
-        const baseWindY = Math.cos(windRad) * (windMph || 0) * 0.06;
-        // Gust amplitude: difference between gust and base wind speed
-        const gustAmpX  = Math.sin(windRad) * Math.max(0, ((gustMph || windMph || 0) - (windMph || 0))) * 0.32;
-
-        // Non-linear count: light flurries = sparse, heavy snow = dense
-        // intensity 0.5 → ~82 flakes, 0.65 → ~143, 0.9 → ~249
-        const count = Math.max(40, Math.round(intensity * intensity * 280 + intensity * 25));
-        const maxOpacity = 0.3 + intensity * 0.65;  // light snow is more transparent
-        _snowFlakes = Array.from({ length: count }, () => {
-            const r = 0.5 + Math.random() * (0.8 + intensity * 3.8);
-            return {
-                x: Math.random() * c.width,
-                y: Math.random() * c.height,
-                r,
-                // smaller flakes fall slower and blow more
-                speed: 0.25 + (r / 5) * (0.5 + intensity * 1.2) + Math.random() * 0.35,
-                wobbleFreq: 0.006 + Math.random() * 0.014,
-                wobbleAmp: 0.6 + Math.random() * 1.4 + (windMph || 0) * 0.04,
-                wobblePhase: Math.random() * Math.PI * 2,
-                // small flakes are more affected by wind
-                windFactor: 0.6 + Math.random() * 0.8 + (1 - Math.min(1, r / 4)) * 0.6,
-                rot: Math.random() * Math.PI * 2,
-                rotSpeed: (Math.random() - 0.5) * 0.015,
-                opacity: (0.25 + Math.random() * 0.75) * maxOpacity,
-                crystal: r > 2.2,  // larger flakes get crystal shape
-            };
-        });
-
-        let frame = 0;
-        let gustPhase = Math.random() * Math.PI * 2;
-        function tick() {
-            _snowRaf = requestAnimationFrame(tick);
-            const w = c.width, h = c.height;
-            ctx.clearRect(0, 0, w, h);
-            frame++;
-            // Slowly varying gust layered on base wind
-            gustPhase += 0.004;
-            const gustX = baseWindX
-                        + Math.sin(gustPhase) * (baseWindX * 0.5 + gustAmpX * 0.9)
-                        + Math.sin(gustPhase * 2.3 + 1) * (baseWindX * 0.3 + gustAmpX * 0.55);
-
-            for (const f of _snowFlakes) {
-                const wobble = Math.sin(frame * f.wobbleFreq + f.wobblePhase) * f.wobbleAmp;
-                f.x += gustX * f.windFactor + wobble;
-                f.y += f.speed + baseWindY * f.windFactor;
-                f.rot += f.rotSpeed;
-
-                if (f.y > h + 6) { f.y = -6; f.x = Math.random() * w; }
-                if (f.x < -6)    f.x = w + 6;
-                if (f.x > w + 6) f.x = -6;
-
-                if (f.crystal) {
-                    _drawCrystal(ctx, f.x, f.y, f.r, f.rot, f.opacity);
-                } else {
-                    ctx.save();
-                    ctx.globalAlpha = f.opacity;
-                    ctx.fillStyle = 'white';
-                    ctx.beginPath();
-                    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
-            }
-        }
-        tick();
-        window.addEventListener('resize', _resizeSnow);
-    }
-
-    function stopSnowfall() {
-        if (_snowRaf) { cancelAnimationFrame(_snowRaf); _snowRaf = null; }
-        const c = document.getElementById('snow-canvas');
-        if (c) { c.style.display = 'none'; const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); }
-        window.removeEventListener('resize', _resizeSnow);
-    }
 
     // ── Rainfall overlay ──────────────────────────────────────────────────
     // Intensity map: WMO code → 0–1
@@ -5994,6 +5559,7 @@
     // ─────────────────────────────────────────────────────────────────────
 
     initCarousel();
+    renderHome();
     fetchWeather();
     fetchAndRenderLiftTrailsAndTicker();
     // Fetch live events at startup so ticker shows today's events immediately
@@ -6004,7 +5570,6 @@
     setInterval(() => { if (foodRendered) renderFood(); }, 5 * 60 * 1000);
 
 </script>
-<canvas id="snow-canvas" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998"></canvas>
 <canvas id="rain-canvas" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9997"></canvas>
 </body>
 </html>
