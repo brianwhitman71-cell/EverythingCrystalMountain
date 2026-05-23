@@ -1113,6 +1113,9 @@
         <div class="nav-item" id="nav-winter" onclick="navigateTo('winter')">
             <span class="nav-item-icon">🥾</span> Summer Activities &amp; Flying Raven
         </div>
+        <div class="nav-item" id="nav-rainier" onclick="navigateTo('rainier')">
+            <span class="nav-item-icon">🌋</span> Mt. Rainier National Park
+        </div>
         <div class="nav-item" id="nav-food" onclick="navigateTo('food')">
             <span class="nav-item-icon">🍽</span> Eat &amp; Drink on the Mountain
         </div>
@@ -1283,6 +1286,15 @@
             <span class="page-title">🍽 Eat &amp; Drink on the Mountain</span>
         </div>
         <div id="food-content"></div>
+    </div>
+
+    <!-- Mt. Rainier National Park view -->
+    <div id="view-rainier" class="view">
+        <div class="page-header">
+            <button class="page-back-btn" onclick="navigateTo('home')">← Back</button>
+            <span class="page-title">🌋 Mt. Rainier National Park</span>
+        </div>
+        <div id="rainier-content"></div>
     </div>
 
     <!-- Summer Activities & Flying Raven view (uses same id 'view-winter' so navigateTo('winter') still works) -->
@@ -5222,6 +5234,7 @@
     let cannabisRendered    = false;
     let mapleRendered       = false;
     let winterRendered      = false;
+    let rainierRendered     = false;
 
     function toggleMenu() {
         document.getElementById('nav-drawer').classList.toggle('open');
@@ -5231,6 +5244,494 @@
         document.getElementById('nav-drawer').classList.remove('open');
         document.getElementById('nav-overlay').classList.remove('open');
     }
+
+    // ── Mt. Rainier National Park ─────────────────────────────────────────
+    // Sourced primarily from nps.gov/mora. The park spans 369 sq mi around
+    // the 14,410-ft Mt. Rainier — the most glaciated peak in the contiguous US.
+    // Crystal Mountain sits ~14 mi from the SR-410 (Cayuse Pass) east entrance.
+    const RAINIER_ENTRANCES = [
+        {
+            name: "Sunrise Entrance (NE) — Closest to Crystal Mountain",
+            distance: "~20 min from Crystal · ~40 min to Sunrise visitor center",
+            route: "SR-410 S → SR-123 → Sunrise Park Rd",
+            season: "Sunrise Rd open ~late June – late September (snow-dependent)",
+            tag: "Highest road in the park — 6,400 ft",
+            tagCls: "pill-good",
+            desc: "Your nearest gateway. Sunrise Rd climbs to 6,400 ft for the most direct view of Rainier's north face — Emmons Glacier filling the entire horizon. Wildflower meadows peak in late July / early August. Heavy crowds 10am–3pm on summer weekends — go early.",
+            highlights: ["Highest road in park", "Closest to Crystal", "Best Rainier views", "Snowy Sept reopens 2026"],
+        },
+        {
+            name: "Stevens Canyon / Cayuse Pass (SE)",
+            distance: "~30 min from Crystal",
+            route: "SR-410 S → SR-123 S → Stevens Canyon Rd",
+            season: "Cayuse Pass closes mid-Nov – late May",
+            tag: "Scenic loop access",
+            tagCls: "pill-fair",
+            desc: "Drops into the park's southeast — old-growth Grove of the Patriarchs, Box Canyon, Reflection Lakes. The connector between Sunrise and Paradise via the inside of the park. Pair with a Tipsoo Lake stop on the way over Chinook Pass.",
+            highlights: ["Grove of the Patriarchs", "Reflection Lakes", "Stevens Canyon overlook"],
+        },
+        {
+            name: "Nisqually Entrance (SW) — Main Entrance",
+            distance: "~2h from Crystal",
+            route: "SR-410 → SR-7 S → SR-706 via Ashford",
+            season: "Open year-round to Longmire; Paradise Rd open year-round but chains often required Nov–May",
+            tag: "Most popular · Year-round",
+            tagCls: "pill-good",
+            desc: "The park's only year-round entrance, on the southwest side via Ashford. Longmire museum + lodging, then up to Paradise (5,400 ft) — the iconic wildflower / Skyline Trail / Paradise Inn area. Plan ahead: timed-entry reservations required mid-May through Labor Day weekend for Paradise &amp; Sunrise.",
+            highlights: ["Year-round access", "Paradise Inn / Skyline Trail", "Longmire museum", "Timed entry summer"],
+        },
+        {
+            name: "Carbon River / Mowich Lake (NW)",
+            distance: "~2h 30m from Crystal",
+            route: "SR-410 → SR-165 via Wilkeson",
+            season: "Mowich Lake Rd open ~July – early Oct; Carbon River Rd closed to vehicles (bike/hike only)",
+            tag: "Least crowded · Rainforest",
+            tagCls: "pill-fair",
+            desc: "The wild, quiet corner. Carbon River side is the only inland temperate rainforest in the lower 48. Mowich Lake is the highest accessible road on the west side — Spray Park &amp; Tolmie Peak trails launch from here. Vehicle access to Carbon River was permanently removed; it's now an excellent bike-and-hike.",
+            highlights: ["Inland rainforest", "Bike + hike", "Lowest crowds", "Spray Park trailhead"],
+        },
+        {
+            name: "Ohanapecosh / Stevens Canyon (SE Visitor Hub)",
+            distance: "~45 min from Crystal",
+            route: "SR-410 S → SR-123 S",
+            season: "Late May – mid-Oct",
+            tag: "Old-growth groves",
+            tagCls: "pill-fresh",
+            desc: "Cool, low-elevation campground and visitor area at 1,914 ft in old-growth Douglas fir. Hot Springs were closed decades ago, but the Silver Falls Loop is one of the best easy walks in the park. Best camping option closest to Crystal.",
+            highlights: ["Largest campground", "Old-growth fir", "Silver Falls loop"],
+        },
+    ];
+
+    const RAINIER_TRAILS = [
+        {
+            region: "Sunrise &amp; NE (Crystal-side)",
+            color: "pill-good",
+            trails: [
+                { name: "Naches Peak Loop", miles: "3.2 mi loop · 600 ft gain", level: "Easy", time: "1.5–2 hrs",
+                  desc: "The classic Rainier wildflower walk. Starts right at Tipsoo Lake (SR-410). Mirror-still lake reflections of Rainier, then a meadow traverse with sweeping views. Peak bloom: late July to mid-August.",
+                  start: "Tipsoo Lake, SR-410 @ Chinook Pass" },
+                { name: "Burroughs Mountain", miles: "5–9 mi · 900–2,500 ft gain", level: "Moderate–Strenuous", time: "3–6 hrs",
+                  desc: "The closest you can hike to Rainier without a glacier permit. Three summits (1st, 2nd, 3rd Burroughs). Walks across alpine tundra above 7,000 ft straight at Emmons Glacier. Snow-dependent — usually clear by mid-July.",
+                  start: "Sunrise Visitor Center" },
+                { name: "Mount Fremont Lookout", miles: "5.6 mi RT · 1,200 ft gain", level: "Moderate", time: "3–4 hrs",
+                  desc: "Historic 1934 fire lookout perched at 7,317 ft. Sweeping panorama from Rainier across the Cascades to the Olympics. One of the best lookout hikes in WA.",
+                  start: "Sunrise Visitor Center" },
+                { name: "Sunrise Rim &amp; Shadow Lake Loop", miles: "5.2 mi loop · 850 ft gain", level: "Moderate", time: "3 hrs",
+                  desc: "Easier loop with three-mountain panoramas, alpine lakes, and abundant marmot sightings. Great family hike if Burroughs is too much.",
+                  start: "Sunrise Visitor Center" },
+                { name: "Crystal Lakes Trail", miles: "6 mi RT · 2,300 ft gain", level: "Strenuous", time: "4–5 hrs",
+                  desc: "Sister trail to Crystal Mountain Resort itself — climbs from SR-410 to a pair of glacier-carved alpine lakes below Sourdough Gap. Steep but worth it.",
+                  start: "SR-410 @ MP 60 (between Crystal and Cayuse Pass)" },
+            ],
+        },
+        {
+            region: "Paradise (SW)",
+            color: "pill-fair",
+            trails: [
+                { name: "Skyline Trail Loop", miles: "5.5 mi loop · 1,700 ft gain", level: "Moderate", time: "4–5 hrs",
+                  desc: "THE Paradise hike. Climbs through summer wildflowers to Panorama Point (6,800 ft) with Adams, Hood, and St. Helens lined up to the south. Closes loop past Myrtle Falls.",
+                  start: "Paradise Visitor Center" },
+                { name: "Myrtle Falls", miles: "0.8 mi RT · 100 ft gain", level: "Easy / Paved", time: "30 min",
+                  desc: "The postcard shot — Myrtle Falls in the foreground, Rainier rising behind. Paved and accessible.",
+                  start: "Paradise Visitor Center" },
+                { name: "Pinnacle Peak Saddle", miles: "2.6 mi RT · 1,150 ft gain", level: "Moderate", time: "2–3 hrs",
+                  desc: "Steep short climb across SR-706 from Paradise — the BEST viewpoint of Rainier from the south. Tatoosh Range under your feet, the mountain right across the valley.",
+                  start: "Reflection Lakes pullout, SR-706" },
+                { name: "Comet Falls / Van Trump Park", miles: "5.7 mi RT · 2,200 ft gain", level: "Strenuous", time: "4–5 hrs",
+                  desc: "Climbs to a 320-ft waterfall (Comet Falls — one of WA's tallest) then continues into wildflower meadows. Strenuous but iconic.",
+                  start: "SR-706, 4.4 mi above Longmire" },
+            ],
+        },
+        {
+            region: "Mowich / Carbon River (NW)",
+            color: "pill-good",
+            trails: [
+                { name: "Tolmie Peak Lookout", miles: "6.5 mi RT · 1,100 ft gain", level: "Moderate", time: "3–4 hrs",
+                  desc: "Hike past Eunice Lake (Rainier reflection paradise) up to a fire lookout perched above Mowich. Less crowded than the Paradise/Sunrise lookouts.",
+                  start: "Mowich Lake" },
+                { name: "Spray Park", miles: "8 mi RT · 1,600 ft gain", level: "Moderate", time: "5 hrs",
+                  desc: "One of the best wildflower hikes in the park — vast subalpine meadows beneath Rainier's NW face. Spray Falls is a midway bonus.",
+                  start: "Mowich Lake Campground" },
+                { name: "Carbon River Rainforest Loop", miles: "0.3 mi loop · flat", level: "Easy / Paved", time: "20 min",
+                  desc: "Quick interpretive loop through the only inland temperate rainforest in the lower 48. Massive cedars, hemlocks, moss-covered everything.",
+                  start: "Carbon River Ranger Station" },
+                { name: "Green Lake (via Carbon River)", miles: "9 mi RT · 600 ft gain", level: "Moderate (long, flat)", time: "5 hrs",
+                  desc: "Long, mostly-flat walk up the old Carbon River road then up to a quiet emerald lake. Bike the first 5 miles to cut distance.",
+                  start: "Carbon River Ranger Station" },
+            ],
+        },
+        {
+            region: "Ohanapecosh / Stevens Canyon (SE)",
+            color: "pill-fresh",
+            trails: [
+                { name: "Grove of the Patriarchs", miles: "1.5 mi loop · 100 ft", level: "Easy", time: "1 hr",
+                  desc: "Easy loop across a suspension bridge into a grove of 1,000-year-old Douglas fir, red cedar, and western hemlock. Some of the oldest trees in WA. (Suspension bridge closed since 2021 flooding — alternate access via Eastside Trail).",
+                  start: "Stevens Canyon Rd, near Ohanapecosh" },
+                { name: "Silver Falls Loop", miles: "2.7 mi loop · 350 ft", level: "Easy–Moderate", time: "1.5 hrs",
+                  desc: "Loops through the Ohanapecosh campground forest down to Silver Falls — a powerful, photogenic falls in old-growth.",
+                  start: "Ohanapecosh Campground" },
+                { name: "Box Canyon", miles: "0.5 mi loop · flat", level: "Easy / Paved", time: "20 min",
+                  desc: "Quick, dramatic stop — a deep narrow slot where the Muddy Fork Cowlitz River carves the rock.",
+                  start: "Stevens Canyon Rd pullout" },
+                { name: "Bench &amp; Snow Lakes", miles: "2.5 mi RT · 700 ft gain", level: "Moderate", time: "2 hrs",
+                  desc: "Two small subalpine lakes between Reflection Lakes and Stevens Canyon. Often quieter than other Stevens Canyon stops.",
+                  start: "SR-706, between Reflection Lakes and Stevens Canyon" },
+            ],
+        },
+    ];
+
+    const RAINIER_LODGING = [
+        {
+            name: "Paradise Inn",
+            type: "Historic Inn (in-park)",
+            location: "Paradise, 5,400 ft",
+            season: "Mid-May – early October",
+            price: "$$$",
+            priceNote: "From ~$245/night",
+            phone: "(855) 755-2275",
+            url: "https://www.mtrainierguestservices.com/accommodations/paradise-inn/",
+            desc: "Built in 1916, this National Historic Landmark sits at Paradise (5,400 ft) with the mountain framed in every south-facing window. Cedar-pole lobby, massive stone fireplaces, classic mountain dining room. Books out 6–12 months ahead.",
+            highlights: ["Historic Landmark", "Mountain views", "Open mid-May – early Oct", "Books out months ahead"],
+        },
+        {
+            name: "National Park Inn (Longmire)",
+            type: "Year-Round Inn (in-park)",
+            location: "Longmire, 2,761 ft",
+            season: "Year-round",
+            price: "$$$",
+            priceNote: "From ~$205/night",
+            phone: "(855) 755-2275",
+            url: "https://www.mtrainierguestservices.com/accommodations/national-park-inn/",
+            desc: "The park's only year-round lodging, at Longmire. 25 rooms, on-site restaurant, general store, fireplace lounge. Winter base camp for snowshoeing &amp; cross-country skiing. Often easier to book than Paradise Inn.",
+            highlights: ["Year-round", "Restaurant on-site", "Winter access", "Smaller, quieter"],
+        },
+        {
+            name: "Alta Crystal Resort",
+            type: "Suite Resort (4 mi from NP)",
+            location: "Greenwater, WA",
+            season: "Year-round",
+            price: "$$$",
+            priceNote: "From ~$220/night",
+            phone: "(360) 663-2500",
+            url: "https://www.altacrystalresort.com",
+            desc: "The closest off-park suite resort to the Sunrise / Cayuse Pass entrance. All-suite property, heated outdoor pool year-round, nightly bonfires. De-facto base camp for east-side Rainier visits.",
+            highlights: ["Closest non-park lodging", "All-suite", "Year-round pool", "4 mi to NP gate"],
+        },
+        {
+            name: "Mt. Rainier Lodging by Cascade Properties",
+            type: "Vacation Cabins (Ashford / Greenwater)",
+            location: "Multiple locations ringing the park",
+            season: "Year-round",
+            price: "$$$",
+            priceNote: "From ~$235/night",
+            phone: "(360) 569-2533",
+            url: "https://www.mtrainierlodging.com",
+            desc: "Curated cabins and chalets near Ashford (SW / Nisqually side) and Greenwater (NE / Crystal side). Hot tubs, fire pits, dog-friendly options. Best for families or groups wanting privacy.",
+            highlights: ["Whole-cabin rentals", "Multiple park entrances", "Family / group friendly"],
+        },
+        {
+            name: "Stormking Spa &amp; Cabins (Ashford)",
+            type: "Adults-Only Cabins + Spa",
+            location: "Ashford, WA",
+            season: "Year-round",
+            price: "$$$$",
+            priceNote: "From ~$295/night",
+            phone: "(360) 569-2964",
+            url: "https://www.stormkingspa.com",
+            desc: "Adults-only luxury cabins with private hot tubs on the Nisqually side. Spa services, soaking tubs, an exceptional dining program at the on-site Wildberry Restaurant nearby. The romantic option.",
+            highlights: ["Adults only", "Private hot tubs", "Spa services", "Ashford / SW entrance"],
+        },
+    ];
+
+    const RAINIER_CAMPING = [
+        {
+            name: "Ohanapecosh Campground",
+            sites: "188 sites",
+            elevation: "1,914 ft",
+            season: "Late May – mid-October",
+            res: "Reservations required · recreation.gov",
+            desc: "Largest park campground, in old-growth forest along the Ohanapecosh River. Closest established campground to Crystal Mountain — ~45 min drive. Cool, shady, low-elevation. Walk to Silver Falls from camp.",
+            best: "Best for families wanting cool shade and short driving from Crystal.",
+        },
+        {
+            name: "White River Campground",
+            sites: "112 sites",
+            elevation: "4,400 ft",
+            season: "Late June – late September",
+            res: "Reservations required · recreation.gov",
+            desc: "Highest established campground, right next to Sunrise. Climbers' base for the Emmons Glacier route. Tent + small RV (no hookups). Same elevation as Crystal Mountain base.",
+            best: "Best for hikers planning multi-day Sunrise-area trips.",
+        },
+        {
+            name: "Cougar Rock Campground",
+            sites: "173 sites",
+            elevation: "3,180 ft",
+            season: "Late May – early October",
+            res: "Reservations required · recreation.gov",
+            desc: "On the Nisqually side between Longmire and Paradise. Quick access to Paradise wildflower hikes and the Skyline Trail. Mostly tent + small RVs.",
+            best: "Best for Paradise / SW-side hiking trips.",
+        },
+        {
+            name: "Mowich Lake Campground (Walk-In)",
+            sites: "10 walk-in sites",
+            elevation: "4,929 ft",
+            season: "July – early October",
+            res: "First-come, first-served · free",
+            desc: "Tiny, free, primitive walk-in campground on the NW side at Mowich Lake. No water, no fees, just a stunning lake and a launching pad for Tolmie Peak / Spray Park.",
+            best: "Best for hikers who want the quietest park experience.",
+        },
+    ];
+
+    const RAINIER_DINING = [
+        { name: "Paradise Inn Dining Room", where: "Paradise (in park)", season: "Mid-May – early Oct",
+          desc: "Classic in-park hotel dining room — breakfast, lunch, three-course dinner. Reservations recommended. Beer/wine list. Walls of windows looking at Rainier." },
+        { name: "Tatoosh Café (Paradise Visitor Center)", where: "Paradise (in park)", season: "Mid-May – early Oct",
+          desc: "Casual cafeteria-style food right inside the Jackson Visitor Center. Soup, sandwiches, snacks, coffee. The quick option after a Skyline hike." },
+        { name: "National Park Inn Restaurant", where: "Longmire (in park)", season: "Year-round",
+          desc: "Year-round restaurant on the SW side — breakfast through dinner. Smaller, cozier than Paradise. Fireside seating in winter." },
+        { name: "Sunrise Day Lodge", where: "Sunrise (in park)", season: "Late June – late September",
+          desc: "Cafeteria service at the Sunrise visitor area — soup, chili, sandwiches, ice cream. Often closes by 5pm. Limited summer-only hours." },
+        { name: "Naches Tavern", where: "Greenwater (outside park)", season: "Year-round",
+          desc: "The pre- or post-park stop on SR-410 — burgers, beer, fireplace, decades of history. 15 min from Sunrise gate." },
+        { name: "Wapiti Woolies Café", where: "Greenwater (outside park)", season: "Year-round",
+          desc: "Espresso, breakfast sandwiches, baked goods on SR-410. The morning fuel stop." },
+        { name: "Copper Creek Inn", where: "Ashford (Nisqually side)", season: "Year-round",
+          desc: "The legendary blackberry pie stop on the SW side. Diner-style breakfast/lunch, full dinner. A pre/post-park ritual for Nisqually visitors." },
+    ];
+
+    function renderRainier() {
+        const el = document.getElementById('rainier-content');
+        if (!el) return;
+
+        const entrancesHtml = RAINIER_ENTRANCES.map(e => `
+            <div class="brewery-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.4rem">
+                    <div>
+                        <span style="display:inline-block;font-size:0.6rem;font-weight:700;border-radius:5px;padding:0.15rem 0.5rem;margin-bottom:0.35rem;" class="${e.tagCls}">${e.tag}</span>
+                        <div class="brewery-name">${e.name}</div>
+                    </div>
+                    <div class="brewery-dist">${e.distance}</div>
+                </div>
+                <div class="brewery-town">🛣 ${e.route}</div>
+                <div style="font-size:0.68rem;color:#7ec8e3;margin-bottom:0.35rem">📅 ${e.season}</div>
+                <div class="brewery-beer" style="font-size:0.78rem;line-height:1.5;margin-bottom:0.5rem">${e.desc}</div>
+                <div>${e.highlights.map(h => `<span style="display:inline-block;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);border-radius:20px;padding:0.15rem 0.6rem;font-size:0.62rem;color:#90cdf4;margin:0.15rem 0.15rem 0 0">${h}</span>`).join('')}</div>
+            </div>
+        `).join('');
+
+        const trailsHtml = RAINIER_TRAILS.map(region => `
+            <div style="margin-bottom:1.5rem">
+                <div style="font-size:0.78rem;font-weight:700;color:#7ec8e3;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.6rem;padding-left:0.25rem;border-left:3px solid #38bdf8">${region.region}</div>
+                <div class="brewery-grid">
+                    ${region.trails.map(t => `
+                        <div class="brewery-card">
+                            <div class="brewery-header">
+                                <div class="brewery-name">🥾 ${t.name}</div>
+                                <div class="brewery-dist">${t.time}</div>
+                            </div>
+                            <div class="brewery-town">📏 ${t.miles} · <span style="color:#fde68a">${t.level}</span></div>
+                            <div style="font-size:0.78rem;color:#c8dce8;line-height:1.5;margin:0.4rem 0">${t.desc}</div>
+                            <div style="font-size:0.62rem;color:#567a96">🚩 Starts: ${t.start}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        const lodgingHtml = RAINIER_LODGING.map(p => `
+            <div class="card" style="margin-bottom:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
+                    <div>
+                        <div style="font-size:1rem;font-weight:700;color:white;margin-bottom:0.1rem">🏠 ${p.name}</div>
+                        <div style="font-size:0.72rem;color:#567a96">${p.type} · ${p.location} · ${p.season}</div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;margin-left:1rem">
+                        <div style="font-size:1rem;font-weight:700;color:#38bdf8">${p.price}</div>
+                        <div style="font-size:0.65rem;color:#567a96">${p.priceNote}</div>
+                    </div>
+                </div>
+                <div style="font-size:0.8rem;color:#c8dce8;line-height:1.5;margin-bottom:0.6rem">${p.desc}</div>
+                <div style="margin-bottom:0.75rem">${p.highlights.map(h => `<span style="display:inline-block;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);border-radius:20px;padding:0.15rem 0.6rem;font-size:0.62rem;color:#90cdf4;margin:0.15rem 0.15rem 0.15rem 0">${h}</span>`).join('')}</div>
+                <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center">
+                    <a href="${p.url}" target="_blank" rel="noopener" style="display:inline-block;background:#38bdf8;color:#0a1628;font-weight:700;font-size:0.78rem;padding:0.45rem 1rem;border-radius:8px;text-decoration:none">Book →</a>
+                    <a href="tel:${p.phone.replace(/[^0-9]/g,'')}" style="display:inline-block;background:rgba(255,255,255,0.07);color:#90cdf4;font-size:0.75rem;padding:0.45rem 0.8rem;border-radius:8px;text-decoration:none;border:1px solid rgba(255,255,255,0.12)">📞 ${p.phone}</a>
+                </div>
+            </div>
+        `).join('');
+
+        const campingHtml = RAINIER_CAMPING.map(c => `
+            <div class="brewery-card">
+                <div class="brewery-header">
+                    <div class="brewery-name">⛺ ${c.name}</div>
+                    <div class="brewery-dist">${c.sites}</div>
+                </div>
+                <div class="brewery-town">📍 ${c.elevation} elevation · 📅 ${c.season}</div>
+                <div style="font-size:0.68rem;color:#fde68a;margin:0.35rem 0;font-weight:600">🎫 ${c.res}</div>
+                <div style="font-size:0.78rem;color:#c8dce8;line-height:1.5;margin-bottom:0.4rem">${c.desc}</div>
+                <div style="font-size:0.7rem;color:#86efac;background:rgba(134,239,172,0.07);border:1px solid rgba(134,239,172,0.2);border-radius:7px;padding:0.3rem 0.6rem">⭐ ${c.best}</div>
+            </div>
+        `).join('');
+
+        const diningHtml = RAINIER_DINING.map(d => `
+            <div class="brewery-card">
+                <div class="brewery-header">
+                    <div class="brewery-name">🍽 ${d.name}</div>
+                </div>
+                <div class="brewery-town">📍 ${d.where}</div>
+                <div style="font-size:0.68rem;color:#7ec8e3;margin:0.3rem 0">📅 ${d.season}</div>
+                <div style="font-size:0.78rem;color:#c8dce8;line-height:1.5">${d.desc}</div>
+            </div>
+        `).join('');
+
+        el.innerHTML = `
+            <div class="container">
+
+                <!-- Hero -->
+                <div class="powder-alert" style="background:linear-gradient(90deg, rgba(56,189,248,0.15), rgba(99,102,241,0.12));border-color:rgba(99,102,241,0.35);margin-bottom:1.25rem">
+                    <div class="powder-alert-badge" style="font-size:2.6rem;animation:none">🌋</div>
+                    <div style="flex:1;min-width:240px">
+                        <div class="powder-alert-text" style="color:#a5b4fc">Mt. Rainier National Park</div>
+                        <div class="powder-alert-sub" style="color:#c7d2fe">14,410 ft — the most glaciated peak in the contiguous US. Crystal Mountain sits ~14 miles from the SR-410 (Cayuse Pass) east entrance.</div>
+                    </div>
+                    <div style="display:flex;gap:0.4rem;flex-shrink:0;flex-wrap:wrap">
+                        <a href="https://www.nps.gov/mora/" target="_blank" rel="noopener" style="background:#38bdf8;color:#0a1628;font-size:0.75rem;font-weight:700;padding:0.5rem 0.9rem;border-radius:8px;text-decoration:none">nps.gov/mora ↗</a>
+                    </div>
+                </div>
+
+                <!-- Quick facts -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.75rem;margin-bottom:1.5rem">
+                    <div class="card" style="text-align:center;padding:0.85rem 0.6rem">
+                        <div style="font-size:0.6rem;color:#567a96;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.2rem">Established</div>
+                        <div style="font-size:1.1rem;font-weight:700;color:white">1899</div>
+                        <div style="font-size:0.65rem;color:#90cdf4">5th-oldest US national park</div>
+                    </div>
+                    <div class="card" style="text-align:center;padding:0.85rem 0.6rem">
+                        <div style="font-size:0.6rem;color:#567a96;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.2rem">Summit</div>
+                        <div style="font-size:1.1rem;font-weight:700;color:white">14,410 ft</div>
+                        <div style="font-size:0.65rem;color:#90cdf4">Most glaciated US peak</div>
+                    </div>
+                    <div class="card" style="text-align:center;padding:0.85rem 0.6rem">
+                        <div style="font-size:0.6rem;color:#567a96;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.2rem">Entrance Fee</div>
+                        <div style="font-size:1.1rem;font-weight:700;color:white">$30 / vehicle</div>
+                        <div style="font-size:0.65rem;color:#90cdf4">Valid 7 days · America the Beautiful pass accepted</div>
+                    </div>
+                    <div class="card" style="text-align:center;padding:0.85rem 0.6rem">
+                        <div style="font-size:0.6rem;color:#567a96;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.2rem">Timed Entry</div>
+                        <div style="font-size:1.1rem;font-weight:700;color:white">Required</div>
+                        <div style="font-size:0.65rem;color:#90cdf4">Paradise &amp; Sunrise corridors, mid-May – Labor Day · recreation.gov</div>
+                    </div>
+                    <div class="card" style="text-align:center;padding:0.85rem 0.6rem">
+                        <div style="font-size:0.6rem;color:#567a96;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.2rem">Best Wildflowers</div>
+                        <div style="font-size:1.1rem;font-weight:700;color:white">Late July – Mid-Aug</div>
+                        <div style="font-size:0.65rem;color:#90cdf4">Naches Peak, Skyline, Spray Park</div>
+                    </div>
+                    <div class="card" style="text-align:center;padding:0.85rem 0.6rem">
+                        <div style="font-size:0.6rem;color:#567a96;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.2rem">Park Area</div>
+                        <div style="font-size:1.1rem;font-weight:700;color:white">369 sq mi</div>
+                        <div style="font-size:0.65rem;color:#90cdf4">25 named glaciers</div>
+                    </div>
+                </div>
+
+                <!-- Hours / open status -->
+                <div class="card" style="margin-bottom:1.5rem">
+                    <div class="card-title">🕐 When the Park Is Open</div>
+                    <div style="font-size:0.85rem;color:#c8dce8;line-height:1.6">
+                        <div style="margin-bottom:0.4rem"><strong style="color:#86efac">Year-round:</strong> Nisqually entrance (SW) and the road to Longmire. Paradise Rd is plowed but chains/AWD often required Nov–May.</div>
+                        <div style="margin-bottom:0.4rem"><strong style="color:#fde68a">Summer only (late May – mid-Oct):</strong> Stevens Canyon Rd, Cayuse Pass / SR-123, Sunrise Rd (typ. late June – late Sept), Mowich Lake Rd (typ. July – early Oct).</div>
+                        <div style="margin-bottom:0.4rem"><strong style="color:#90cdf4">Visitor center hours:</strong> Jackson at Paradise — year-round, daily 10am–5pm (summer 9am–7pm). Sunrise — late June – late Sept, daily 10am–6pm. Henry M. Jackson — closed for renovation; check NPS for current status.</div>
+                        <div style="margin-bottom:0.4rem"><strong style="color:#f87171">Timed entry alert (2025–2026):</strong> Vehicle reservations are required for the Paradise corridor (5am–3pm) and Sunrise corridor (7am–3pm) on weekends and select days mid-May through Labor Day weekend. Reserve at recreation.gov 30 days ahead. Crystal Mountain access on SR-410 is OUTSIDE the reservation zone.</div>
+                        <div><strong style="color:#7ec8e3">Park-wide:</strong> The park itself never closes — backcountry access continues year-round. Specific roads/services are seasonal.</div>
+                    </div>
+                </div>
+
+                <!-- Entrances -->
+                <div class="section-header" style="margin-bottom:0.5rem">🚪 Park Entrances</div>
+                <div style="padding:0 0 0.75rem;font-size:0.72rem;color:#567a96;line-height:1.6">Five major entrances ring the park. From Crystal Mountain, Sunrise (NE) and Stevens Canyon (SE) are by far the closest — all on SR-410 / SR-123.</div>
+                <div class="brewery-grid" style="margin-bottom:1.5rem">
+                    ${entrancesHtml}
+                </div>
+
+                <!-- Trails -->
+                <div class="section-header" style="margin-bottom:0.5rem">🥾 Top Trails by Region</div>
+                <div style="padding:0 0 0.75rem;font-size:0.72rem;color:#567a96;line-height:1.6">From easy interpretive loops to multi-thousand-foot climbs. Crystal Mountain hikers will use Sunrise &amp; NE trails most; the SR-410 / SR-123 / Stevens Canyon corridor opens a lot of options on a single day-trip.</div>
+                ${trailsHtml}
+
+                <!-- Camping -->
+                <div class="section-header" style="margin-bottom:0.5rem">⛺ Campgrounds</div>
+                <div style="padding:0 0 0.75rem;font-size:0.72rem;color:#567a96;line-height:1.6">All park front-country campgrounds require advance reservation at recreation.gov during summer (book 6 months out). No hookups. RV length limits vary.</div>
+                <div class="brewery-grid" style="margin-bottom:1.5rem">
+                    ${campingHtml}
+                </div>
+
+                <!-- Lodging -->
+                <div class="section-header" style="margin-bottom:0.5rem">🛏️ Lodging — In-Park &amp; Nearby</div>
+                <div style="padding:0 0 0.75rem;font-size:0.72rem;color:#567a96;line-height:1.6">In-park lodges (Paradise &amp; Longmire) book 6–12 months ahead. Greenwater &amp; Ashford have plenty of cabin / inn options if the lodges are full. See the <a href="#" onclick="event.preventDefault();navigateTo('lodging')" style="color:#38bdf8">Local Lodging page</a> for more Crystal-side options.</div>
+                <div style="margin-bottom:1.5rem">${lodgingHtml}</div>
+
+                <!-- Dining -->
+                <div class="section-header" style="margin-bottom:0.5rem">🍽 Where to Eat — In-Park &amp; Gateways</div>
+                <div style="padding:0 0 0.75rem;font-size:0.72rem;color:#567a96;line-height:1.6">In-park dining is limited and seasonal — pack snacks for long days. Naches Tavern (Greenwater) is the best pre/post-Sunrise meal.</div>
+                <div class="brewery-grid" style="margin-bottom:1.5rem">
+                    ${diningHtml}
+                </div>
+
+                <!-- Wildlife & safety -->
+                <div class="card" style="margin-bottom:1.5rem">
+                    <div class="card-title">🐻 Wildlife &amp; Safety</div>
+                    <div style="font-size:0.85rem;color:#c8dce8;line-height:1.7">
+                        <p style="margin-bottom:0.6rem"><strong style="color:#86efac">Common sightings:</strong> Black bears (especially in Spray Park, Burroughs, and around Mowich/Carbon), hoary marmots (every alpine meadow), mountain goats (Goat Rocks adjacent, occasionally up high), black-tailed deer, Roosevelt elk (lower elevations), pikas, golden-mantled ground squirrels, and Clark's nutcrackers.</p>
+                        <p style="margin-bottom:0.6rem"><strong style="color:#fde68a">Bear safety:</strong> Carry bear spray. Store food in vehicles or bear canisters. NEVER feed wildlife. Black bears are not aggressive but will approach for food. Give 100 yards / 100 m.</p>
+                        <p style="margin-bottom:0.6rem"><strong style="color:#f87171">Mountain safety:</strong> Mt. Rainier creates its own weather. Pack the 10 essentials even for short hikes. Hypothermia is the #1 killer — alpine temps can drop 30°F in an hour. Skyline / Burroughs / Pinnacle: always carry an extra layer + headlamp + water.</p>
+                        <p style="margin-bottom:0.6rem"><strong style="color:#7ec8e3">Altitude:</strong> Paradise is 5,400 ft, Sunrise is 6,400 ft, Burroughs 3rd peak is 7,800 ft. From sea level (SEA → Crystal in a day) some hikers feel altitude — hydrate aggressively.</p>
+                        <p><strong style="color:#a78bfa">Glaciers &amp; rivers:</strong> Never walk on glacier ice without a guide. Glacial-fed rivers run fast and cold — they spike in afternoon heat as upper snow melts.</p>
+                    </div>
+                </div>
+
+                <!-- Best time to visit -->
+                <div class="card" style="margin-bottom:1.5rem">
+                    <div class="card-title">📅 Best Time to Visit</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.65rem;font-size:0.78rem;line-height:1.5">
+                        <div style="padding:0.7rem;background:rgba(134,239,172,0.07);border:1px solid rgba(134,239,172,0.2);border-radius:8px">
+                            <div style="font-weight:700;color:#86efac;margin-bottom:0.25rem">☀️ Late Jul – Mid-Aug</div>
+                            <div style="color:#c8dce8">Peak wildflowers, all roads open, longest days, warmest temps. Busy at Paradise &amp; Sunrise.</div>
+                        </div>
+                        <div style="padding:0.7rem;background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.2);border-radius:8px">
+                            <div style="font-weight:700;color:#7ec8e3;margin-bottom:0.25rem">🍂 Mid-Sept – Mid-Oct</div>
+                            <div style="color:#c8dce8">Fall colors, fewer crowds, golden tundra around Sunrise. Roads still open. Best for photographers.</div>
+                        </div>
+                        <div style="padding:0.7rem;background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);border-radius:8px">
+                            <div style="font-weight:700;color:#c4b5fd;margin-bottom:0.25rem">❄️ Nov – Apr</div>
+                            <div style="color:#c8dce8">Snowshoeing, cross-country, ranger-led snowshoe walks at Paradise. Only Nisqually entrance open.</div>
+                        </div>
+                        <div style="padding:0.7rem;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.2);border-radius:8px">
+                            <div style="font-weight:700;color:#fbbf24;margin-bottom:0.25rem">🌸 Late May – Jun</div>
+                            <div style="color:#c8dce8">Lower-elevation waterfalls, Comet Falls peaks. Higher trails snowy. Sunrise opens late June. Cool, lush.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resources -->
+                <div class="card" style="margin-bottom:1.5rem">
+                    <div class="card-title">📚 Resources &amp; Reservations</div>
+                    <div style="font-size:0.82rem;color:#c8dce8;line-height:1.7">
+                        <div style="margin-bottom:0.5rem">🌐 <a href="https://www.nps.gov/mora/" target="_blank" rel="noopener" style="color:#38bdf8">nps.gov/mora</a> — Official park site, current conditions, alerts</div>
+                        <div style="margin-bottom:0.5rem">🎫 <a href="https://www.recreation.gov/timed-entry/10086936" target="_blank" rel="noopener" style="color:#38bdf8">recreation.gov</a> — Timed-entry reservations (Paradise &amp; Sunrise), campground bookings</div>
+                        <div style="margin-bottom:0.5rem">🛣 <a href="https://wsdot.com/travel/real-time/mountainpasses/snoqualmie" target="_blank" rel="noopener" style="color:#38bdf8">WSDOT pass reports</a> — Real-time SR-410 / Chinook / Cayuse Pass status</div>
+                        <div style="margin-bottom:0.5rem">🥾 <a href="https://www.wta.org/go-hiking/trip-reports" target="_blank" rel="noopener" style="color:#38bdf8">WTA trip reports</a> — Recent on-the-ground conditions for every trail</div>
+                        <div style="margin-bottom:0.5rem">🏨 <a href="https://www.mtrainierguestservices.com" target="_blank" rel="noopener" style="color:#38bdf8">mtrainierguestservices.com</a> — Paradise Inn &amp; National Park Inn reservations</div>
+                        <div>📞 Park headquarters: <a href="tel:+13605692211" style="color:#38bdf8">(360) 569-2211</a></div>
+                    </div>
+                </div>
+
+                <div style="text-align:center;font-size:0.7rem;color:#3d6680;padding:0.5rem 1rem 1.5rem;line-height:1.6">
+                    Park info compiled from nps.gov/mora · Trail data verified against WTA · Always check current conditions and alerts before visiting.
+                </div>
+
+            </div>
+        `;
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     function navigateTo(page) {
         closeMenu();
         // Hide all views
@@ -5289,6 +5790,10 @@
             renderWinter();
             winterRendered = true;
         }
+        if (page === 'rainier' && !rainierRendered) {
+            renderRainier();
+            rainierRendered = true;
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -5302,58 +5807,27 @@
     async function buildTicker(sbData) {
         const items = [];
 
-        // Live lift counts from mtnpowder data
-        if (sbData) {
-            const sr = sbData.SnowReport;
-            const open   = sr.TotalOpenLifts;
-            const total  = sr.TotalLifts;
-            const trails = sr.TotalOpenTrails;
-            const groomed = sr.GroomedTrails;
-            const base   = sr.SnowBaseRangeIn;
-            const season = sr.SeasonTotalIn;
-
-            items.push({ label: '🚡 Lifts', val: `${open} of ${total} open`, cls: open > 0 ? 'ticker-open' : '' });
-            items.push({ label: '🎿 Trails', val: `${trails} open · ${groomed} groomed` });
-            if (base && base !== '--') items.push({ label: '❄️ Base Depth', val: `${base}"` });
-            if (season && season !== '--') items.push({ label: '📊 Season Total', val: `${season}"` });
-
-            // On-hold lifts callout
-            const onHold = sbData.MountainAreas
-                .flatMap(a => a.Lifts || [])
-                .filter(l => /hold|delayed/i.test(l.StatusEnglish || ''))
-                .map(l => l.Name);
-            if (onHold.length) {
-                items.push({ label: '⚠ On Hold', val: onHold.join(' · '), cls: 'ticker-hold' });
-            }
-        }
-
-        // Crowd forecast
+        // Crowd forecast — derived from day-of-week + scheduled events.
+        // No snow / powder weighting (summer-first site).
         {
             const now = new Date();
             const dow = now.getDay(); // 0=Sun,1=Mon,...,6=Sat
             const todayStr = now.toISOString().slice(0, 10);
 
-            // Count resort events today (busier with events)
             const todayEvents = _liveEvents.filter(e => e.date === todayStr && e.cat === 'resort').length;
 
-            // Fresh snow from mtnpowder (Last24HoursIn)
-            const snow24 = sbData ? parseFloat(sbData.SnowReport.SummitArea?.Last24HoursIn || sbData.SnowReport.BaseArea?.Last24HoursIn || '0') : 0;
-
-            // Score: weekend +3, Friday +2, Mon/Tue +0, events +1 each, powder day +2
             let score = 0;
             if (dow === 0 || dow === 6) score += 3;       // Sat/Sun
             else if (dow === 5) score += 2;               // Friday
             else if (dow === 1 || dow === 2) score -= 1;  // Mon/Tue quieter
             score += Math.min(todayEvents, 2);
-            if (snow24 >= 4) score += 2;                  // powder day
-            else if (snow24 >= 1) score += 1;
 
             let busy, busyCls;
-            if (score <= 0)      { busy = 'Very Quiet — short lift lines expected';    busyCls = 'ticker-open'; }
+            if (score <= 0)      { busy = 'Very Quiet — short waits at the gondola';   busyCls = 'ticker-open'; }
             else if (score <= 1) { busy = 'Light — minimal wait times';                busyCls = 'ticker-open'; }
-            else if (score <= 2) { busy = 'Moderate — some lift lines possible';       busyCls = ''; }
-            else if (score <= 4) { busy = 'Busy — expect lift lines';                  busyCls = 'ticker-hold'; }
-            else                 { busy = 'Very Busy — powder day + weekend crowds';   busyCls = 'ticker-hold'; }
+            else if (score <= 2) { busy = 'Moderate — some lines at peak times';       busyCls = ''; }
+            else if (score <= 4) { busy = 'Busy — expect lines at the gondola';        busyCls = 'ticker-hold'; }
+            else                 { busy = 'Very Busy — weekend crowds';                busyCls = 'ticker-hold'; }
 
             items.push({ label: '👥 Crowd Forecast', val: busy, cls: busyCls });
         }
@@ -5365,8 +5839,7 @@
             .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         todayEvts.forEach(e => {
             const timeStr = e.time && e.time !== 'All day' ? ` · ${e.time}` : '';
-            const emoji = e.cat === 'music' ? '🎵' : e.cat === 'food' ? '🍺' : '⛷️';
-            // Determine if the event starts at 5pm or later
+            const emoji = e.cat === 'music' ? '🎵' : e.cat === 'food' ? '🍺' : '🏔️';
             const isEvening = (() => {
                 if (!e.time || e.time === 'All day') return false;
                 const m = e.time.match(/^(\d+)(?::(\d+))?(am|pm)/i);
@@ -5385,7 +5858,7 @@
             const w   = wmo(c.weather_code);
             const tmp = Math.round(c.apparent_temperature);
             const wnd = Math.round(c.wind_speed_10m);
-            items.push({ label: `${w.icon} Conditions`, val: `${w.ski} · Feels ${tmp}°F · Wind ${wnd} mph` });
+            items.push({ label: `${w.icon} Weather`, val: `${w.ski} · Feels ${tmp}°F · Wind ${wnd} mph` });
         }
 
         // Venue hours from FOOD_VENUES for today
@@ -5401,10 +5874,13 @@
         const shH = _venueH('Summit House');
         if (shH) items.push({ label: '🏔 Summit House', val: shH });
 
-        // Summer ops headliner
+        // Summer headliner
         items.push({ label: '🎢 Flying Raven', val: 'Aerial ropes course · Reservations recommended' });
 
-        // Day tickets — link only; Crystal uses dynamic pricing
+        // Gondola
+        items.push({ label: '🚠 Mt. Rainier Gondola', val: 'Daily 10am–5pm (mid-Jun – early Oct)' });
+
+        // Tickets — link only; Crystal uses dynamic pricing
         items.push({ label: '🎟 Tickets', val: 'Gondola, ropes &amp; bike tickets — crystalmountainresort.com' });
 
         // Resort info line
