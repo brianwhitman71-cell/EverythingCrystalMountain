@@ -531,6 +531,7 @@
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation; padding: 0 2px;
             white-space: nowrap; line-height: 1.2; min-width: 0;
+            overflow: hidden; text-overflow: ellipsis;
         }
         .tab-btn:active { background: rgba(255,255,255,0.05); }
         .tab-btn.active { color: #38bdf8; }
@@ -2092,19 +2093,31 @@
     // ─────────────────────────────────────────────────────────────────────
 
     // ── Webcams ────────────────────────────────────────────────────────────
-    // Crystal Mountain WA publishes webcams directly on crystalmountainresort.com;
-    // each cam links out to the resort's official webcam page.
-    const CRYSTAL_CAMS_URL = 'https://www.crystalmountainresort.com/the-mountain/conditions/webcams/';
-    const CRYSTAL_CAM_IMG  = 'https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1200&q=70'; // Mt Rainier alpine fallback
+    // Crystal Mountain WA's live cams are served by Roundshot (Crystal 360 Cam
+    // sponsored by Western WA Toyota Dealers) — one Roundshot subpath per cam.
+    // Cam lineup mirrors the official 2026 list on crystalmountainresort.com.
+    // Thumbnails are themed Unsplash stills (Roundshot/InstaCam block hotlinks).
+    const CRYSTAL_CAMS_URL = 'https://www.crystalmountainresort.com/the-mountain/mountain-report-and-webcams/webcams';
+    const ROUNDSHOT = (slug) => `https://crystalmountainresort.roundshot.com/${slug}/`;
     const WEBCAMS = [
-        { name: 'Mt. Rainier Gondola Top',  elev: "6,872'", tag: 'Summit',     tagCls: 'tag-summit', link: CRYSTAL_CAMS_URL, img: CRYSTAL_CAM_IMG },
-        { name: 'Summit House',             elev: "6,872'", tag: 'Summit',     tagCls: 'tag-summit', link: CRYSTAL_CAMS_URL, img: CRYSTAL_CAM_IMG },
-        { name: 'Mid-Mountain (Green Valley)', elev: "5,400'", tag: 'Upper Mtn', tagCls: 'tag-upper', link: CRYSTAL_CAMS_URL, img: CRYSTAL_CAM_IMG },
-        { name: 'Base Area / Gondola Plaza',   elev: "4,400'", tag: 'Base Area', tagCls: 'tag-base',  link: CRYSTAL_CAMS_URL, img: CRYSTAL_CAM_IMG },
-        { name: 'Bullwheel Deck Cam',       elev: "4,400'", tag: 'Base Area',  tagCls: 'tag-base',   link: CRYSTAL_CAMS_URL, img: CRYSTAL_CAM_IMG },
-        { name: 'Chinook Express',          elev: "5,000'", tag: 'Lift Cam',   tagCls: 'tag-lift',   link: CRYSTAL_CAMS_URL, img: CRYSTAL_CAM_IMG },
-        { name: 'Forest Queen Lift',        elev: "4,800'", tag: 'Lift Cam',   tagCls: 'tag-lift',   link: CRYSTAL_CAMS_URL, img: CRYSTAL_CAM_IMG },
-        { name: 'Chair 6 (High Campbell)',  elev: "6,500'", tag: 'Lift Cam',   tagCls: 'tag-lift',   link: CRYSTAL_CAMS_URL, img: CRYSTAL_CAM_IMG },
+        { name: 'Crystal 360 Cam — Silver King Summit', elev: "7,012'", tag: '360° Summit', tagCls: 'tag-summit',
+          link: ROUNDSHOT('summit'),
+          img: 'https://images.unsplash.com/photo-1605540436563-5bca919ae766?auto=format&fit=crop&w=1200&q=70' },
+        { name: 'Top of Chair 6 (High Campbell)',     elev: "7,002'", tag: 'Summit',     tagCls: 'tag-summit',
+          link: ROUNDSHOT('chair6'),
+          img: 'https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1200&q=70' },
+        { name: 'Northway Lift Cam',                  elev: "6,776'", tag: 'Upper Mtn',  tagCls: 'tag-upper',
+          link: ROUNDSHOT('northway'),
+          img: 'https://images.unsplash.com/photo-1517824806704-9040b037703b?auto=format&fit=crop&w=1200&q=70' },
+        { name: 'Mid-Mountain Snow Stake',            elev: "5,400'", tag: 'Snow Stake', tagCls: 'tag-upper',
+          link: ROUNDSHOT('snowstake'),
+          img: 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=1200&q=70' },
+        { name: 'Midway Cam — Top of Chinook Express', elev: "5,200'", tag: 'Lift Cam',   tagCls: 'tag-lift',
+          link: ROUNDSHOT('midway'),
+          img: 'https://images.unsplash.com/photo-1483683804023-6ccdb62f86ef?auto=format&fit=crop&w=1200&q=70' },
+        { name: 'Gold Hills (Looking West)',          elev: "5,044'", tag: 'Lift Cam',   tagCls: 'tag-lift',
+          link: ROUNDSHOT('goldhills'),
+          img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=70' },
     ];
 
     function loadCam(el) {
@@ -3882,50 +3895,27 @@
     }
 
     // ── Road Conditions ───────────────────────────────────────────────────
-    // WSDOT RWIS stations along the SR-410 (Chinook Pass Hwy) corridor to Crystal Mountain.
-    // Station codes resolved from Iowa State mesonet's WA_RWIS network — sensors that don't
-    // resolve will gracefully render "Sensor offline" until verified live IDs are wired up.
-    const RWIS_TARGETS = [
-        { id: 'CHIN',  label: 'Chinook Pass (SR-410, 5,432 ft)', route: 'SR-410',
-          note: 'High alpine pass — closes seasonally (typ. mid-Nov to late May). Major summer scenic drive.' },
-        { id: 'CAYU',  label: 'Cayuse Pass (SR-410/123 jct)',    route: 'SR-410',
-          note: 'Gateway to Mt. Rainier NP east side — closed in winter, watch for late-spring snow.' },
-        { id: 'CMTN',  label: 'SR-410 near Crystal Mtn Blvd',    route: 'SR-410',
-          note: 'Crystal Mountain access — Greenwater corridor, ~6 mi from resort turnoff.' },
+    // WSDOT does not operate any public RWIS sensors on the SR-410 corridor at
+    // Chinook / Cayuse / Crystal (the WA_RWIS network's only stations there are
+    // archived 2006 entries near Yakima). Instead of faking "Sensor offline" UI
+    // we show static pass info that links to WSDOT's real-time per-pass page.
+    const PASS_INFO = [
+        { label: 'Chinook Pass (SR-410, 5,432 ft)', route: 'SR-410',
+          note: 'Highest pass on SR-410 · seasonal closure mid-Nov to late May · classic summer scenic drive past Tipsoo Lake.',
+          season: 'Open · summer ops',
+          seasonCls: 'road-dry',
+          url: 'https://wsdot.com/travel/real-time/mountainpasses/chinook' },
+        { label: 'Cayuse Pass (SR-410/123 jct, 4,694 ft)', route: 'SR-410',
+          note: 'Gateway to Mt. Rainier NP east side · same seasonal closure as Chinook · watch for late-spring snow.',
+          season: 'Open · summer ops',
+          seasonCls: 'road-dry',
+          url: 'https://wsdot.com/travel/real-time/mountainpasses/chinook' },
+        { label: 'SR-410 · Crystal to Greenwater', route: 'SR-410',
+          note: 'Year-round route from Enumclaw to Crystal Mtn Blvd · ~6 mi from Greenwater to the resort turnoff.',
+          season: 'Open year-round',
+          seasonCls: 'road-dry',
+          url: 'https://wsdot.com/travel/real-time/mountainpasses/crystal-to-greenwater' },
     ];
-
-    function _rwisCondition(scond, tsf) {
-        const s = (scond || '').toLowerCase();
-        if (s.includes('ice') || s.includes('frost'))
-            return { label: 'Icy', cls: 'road-icy', icon: '🧊' };
-        if (s.includes('snow') || s.includes('slush'))
-            return { label: 'Snow Covered', cls: 'road-snow', icon: '❄️' };
-        if (s.includes('wet')) {
-            return tsf !== null && tsf < 32
-                ? { label: 'Wet / Near Freezing', cls: 'road-freezing', icon: '⚠️' }
-                : { label: 'Wet', cls: 'road-wet', icon: '💧' };
-        }
-        if (s.includes('moist')) {
-            return tsf !== null && tsf < 32
-                ? { label: 'Moist / Near Freezing', cls: 'road-warn', icon: '⚠️' }
-                : { label: 'Moist', cls: 'road-moist', icon: '🌫️' };
-        }
-        if (s === 'dry') return { label: 'Dry', cls: 'road-dry', icon: '✅' };
-        return { label: scond || 'No Sensor Data', cls: 'road-unknown', icon: '❓' };
-    }
-
-    function _rwisTreatment(scond, tsf) {
-        const s = (scond || '').toLowerCase();
-        if (s.includes('ice') || s.includes('snow') || s.includes('slush'))
-            return { label: '🚛 Active Treatment', cls: 'treat-active' };
-        if (s.includes('moist') && tsf !== null && tsf < 36)
-            return { label: '🧪 Pre-treated (Chemical)', cls: 'treat-likely' };
-        if (s.includes('wet') && tsf !== null && tsf < 34)
-            return { label: '⚠️ Treatment Likely', cls: 'treat-likely' };
-        if (s === 'dry' || (tsf !== null && tsf > 40))
-            return { label: '✓ No Treatment Needed', cls: 'treat-none' };
-        return { label: '— Treatment Status Unknown', cls: 'treat-unknown' };
-    }
 
     function _compassDir(deg) {
         if (deg == null) return '';
@@ -3936,66 +3926,22 @@
     async function renderRoadConditions(containerId = 'btv-roads') {
         const container = document.getElementById(containerId);
         if (!container) return;
-        container.innerHTML = _loadingHtml('Loading road sensor data…');
-
-        const PROXY = 'https://api.codetabs.com/v1/proxy/?quest=';
-        let stationMap = {};
-        try {
-            const res = await fetch(PROXY + encodeURIComponent('https://mesonet.agron.iastate.edu/api/1/currents.json?network=WA_RWIS'));
-            if (res.ok) {
-                const json = await res.json();
-                for (const s of (json.data || [])) stationMap[s.station] = s;
-            }
-        } catch {}
 
         const updatedStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-        const rwisCards = RWIS_TARGETS.map(target => {
-            const s = stationMap[target.id];
-            if (!s) return `
-                <div class="road-card">
-                    <div class="road-card-header">
-                        <div class="road-name">${target.label}</div>
-                        <div class="road-route-tag">${target.route}</div>
-                    </div>
-                    <div class="road-note">${target.note}</div>
-                    <div class="road-status road-unknown">❓ Sensor offline</div>
-                    <div class="road-updated">RWIS ${target.id}</div>
-                </div>`;
-
-            const tsf   = s.tsf0 ?? null;
-            const tmpf  = s.tmpf ?? null;
-            const sknt  = s.sknt ?? null;
-            const gust  = s.gust ?? null;
-            const scond = s.scond0 || null;
-            const cond  = _rwisCondition(scond, tsf);
-            const treat = _rwisTreatment(scond, tsf);
-            const windMph = sknt !== null ? Math.round(sknt * 1.15078) : null;
-            const gustMph = gust !== null ? Math.round(gust * 1.15078) : null;
-            const dir     = _compassDir(s.drct);
-            const obsTime = s.local_valid
-                ? new Date(s.local_valid).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-                : 'recent';
-
-            const stats = [
-                tsf  !== null ? `<span>🌡️ Pavement: <strong>${Math.round(tsf)}°F</strong></span>` : '',
-                tmpf !== null ? `<span>🌤️ Air: <strong>${Math.round(tmpf)}°F</strong></span>` : '',
-                windMph !== null ? `<span>💨 Wind: <strong>${windMph} mph ${dir}${gustMph ? ` (gusts ${gustMph})` : ''}</strong></span>` : '',
-            ].filter(Boolean).join('');
-
-            return `
-                <div class="road-card">
-                    <div class="road-card-header">
-                        <div class="road-name">${target.label}</div>
-                        <div class="road-route-tag">${target.route}</div>
-                    </div>
-                    <div class="road-note">${target.note}</div>
-                    <div class="road-status ${cond.cls}">${cond.icon} ${cond.label}</div>
-                    ${stats ? `<div class="road-stats">${stats}</div>` : ''}
-                    <div class="road-treatment ${treat.cls}">${treat.label}</div>
-                    <div class="road-updated">RWIS sensor ${target.id} · Obs: ${obsTime}</div>
-                </div>`;
-        }).join('');
+        const rwisCards = PASS_INFO.map(p => `
+            <div class="road-card">
+                <div class="road-card-header">
+                    <div class="road-name">${p.label}</div>
+                    <div class="road-route-tag">${p.route}</div>
+                </div>
+                <div class="road-note">${p.note}</div>
+                <div class="road-status ${p.seasonCls}">✅ ${p.season}</div>
+                <a href="${p.url}" target="_blank" rel="noopener"
+                   style="display:inline-block;margin-top:0.4rem;font-size:0.72rem;color:#38bdf8;text-decoration:none">
+                    WSDOT live cams &amp; pass report ↗
+                </a>
+            </div>`).join('');
 
         // Local surface street cards derived from Open-Meteo weather
         // Valley floor (Greenwater / Enumclaw) runs 8–14°F warmer than the Crystal Mountain base (4,400 ft)
@@ -4064,7 +4010,7 @@
                 <span style="font-size:0.6rem;color:#4ade80;font-weight:600">● Live · ${updatedStr}</span>
             </div>
             <div style="padding:0.2rem 1rem 0.4rem;font-size:0.7rem;color:#567a96">
-                WSDOT RWIS sensors (SR-410, Chinook &amp; Cayuse Passes) + local surface street estimates (Greenwater, Enumclaw)
+                SR-410 pass info with links to WSDOT live cams &amp; reports · valley surface streets (Greenwater, Enumclaw) estimated from Crystal Mountain weather
             </div>
             <div class="road-grid">
                 ${rwisCards}
@@ -4975,7 +4921,7 @@
                 { label: 'Book a session ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer/flying-raven-aerial-adventure', primary: true },
                 { label: 'Details', route: 'winter' },
             ],
-            img: 'https://images.unsplash.com/photo-1517823382935-51bfcb0ec6bc?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1775647423221-ac87d3ec338b?auto=format&fit=crop&w=900&q=70',
         },
         {
             emoji: '🚠',
@@ -4987,7 +4933,7 @@
                 { label: 'Tickets ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer/mt-rainier-gondola', primary: true },
                 { label: 'Details', route: 'winter' },
             ],
-            img: 'https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1646698975633-6a8d6ef5e4f3?auto=format&fit=crop&w=900&q=70',
         },
         {
             emoji: '🥾',
@@ -4999,7 +4945,7 @@
                 { label: 'Trail info ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer/hiking', primary: true },
                 { label: 'Details', route: 'winter' },
             ],
-            img: 'https://images.unsplash.com/photo-1469125155630-7ed37e065743?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=900&q=70',
         },
         {
             emoji: '🚵',
@@ -5011,7 +4957,7 @@
                 { label: 'Bike park info ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer/mountain-biking', primary: true },
                 { label: 'Details', route: 'winter' },
             ],
-            img: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1629056528325-f328b5f27ae7?auto=format&fit=crop&w=900&q=70',
         },
         {
             emoji: '🥏',
@@ -5022,7 +4968,7 @@
             ctas: [
                 { label: 'Course info ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer', primary: true },
             ],
-            img: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1725724767938-26e57f67a12c?auto=format&fit=crop&w=900&q=70',
         },
         {
             emoji: '🏔',
@@ -5034,7 +4980,7 @@
                 { label: 'Menu &amp; reservations ↗', href: 'https://www.crystalmountainresort.com/dining/summit-house', primary: true },
                 { label: 'See all dining', route: 'food' },
             ],
-            img: 'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1763778865615-94b4a2e409ea?auto=format&fit=crop&w=900&q=70',
         },
         {
             emoji: '🏞',
@@ -5046,7 +4992,7 @@
                 { label: 'NPS site ↗', href: 'https://www.nps.gov/mora/', primary: true },
                 { label: 'Details', route: 'winter' },
             ],
-            img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1599551528722-6b6d968512a2?auto=format&fit=crop&w=900&q=70',
         },
         {
             emoji: '🚗',
@@ -5058,7 +5004,7 @@
                 { label: 'WSDOT pass status ↗', href: 'https://wsdot.com/travel/real-time/mountainpasses/snoqualmie', primary: true },
                 { label: 'Driving routes', route: 'btv' },
             ],
-            img: 'https://images.unsplash.com/photo-1486500664569-09a82b29b65c?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1689085383734-32c6d88221a7?auto=format&fit=crop&w=900&q=70',
         },
         {
             emoji: '🎟',
@@ -5070,7 +5016,7 @@
                 { label: 'crystalmountainresort.com ↗', href: 'https://www.crystalmountainresort.com/the-mountain/summer', primary: true },
                 { label: 'Upcoming events', route: 'events' },
             ],
-            img: 'https://images.unsplash.com/photo-1454942901704-3c44c11b2ad1?auto=format&fit=crop&w=900&q=70',
+            img: 'https://images.unsplash.com/photo-1509725525985-dae687277f7b?auto=format&fit=crop&w=900&q=70',
         },
     ];
 
@@ -5119,7 +5065,7 @@
                 </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:1rem;margin-bottom:1.5rem">
                 ${tileHtml}
             </div>
 
