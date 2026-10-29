@@ -8,6 +8,24 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Crystal Mtn">
     <title>Everything Crystal Mountain</title>
+    <meta name="description" content="Crystal Mountain WA winter companion: live lifts and snow report, summit forecast, on-mountain and Greenwater/Enumclaw eats, breweries, lodging, getting here, webcams and events.">
+    <meta name="theme-color" content="#071523">
+    <!-- Open Graph / link previews (iMessage, email, Slack, Facebook) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Everything Crystal Mountain">
+    <meta property="og:title" content="Everything Crystal Mountain">
+    <meta property="og:description" content="Snow conditions, weather forecast, and fun to be found — live lifts, summit forecast, Greenwater &amp; Enumclaw eats, breweries, lodging and getting here.">
+    <meta property="og:url" content="https://everythingcrystalmountain.brianwhitman71.workers.dev/">
+    <meta property="og:image" content="https://everythingcrystalmountain.brianwhitman71.workers.dev/og.jpg">
+    <meta property="og:image:secure_url" content="https://everythingcrystalmountain.brianwhitman71.workers.dev/og.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Mt. Rainier from the Crystal Mountain summit with the site title">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Everything Crystal Mountain">
+    <meta name="twitter:description" content="Snow conditions, weather forecast, and fun to be found at Crystal Mountain, WA.">
+    <meta name="twitter:image" content="https://everythingcrystalmountain.brianwhitman71.workers.dev/og.jpg">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         /* Mobile touch improvements */
@@ -1030,8 +1048,9 @@
         .brewery-note  { font-size:0.68rem; color:#567a96; margin-top:0.3rem; }
 
         /* ── Road Conditions page ── */
-        .road-grid { display:grid; grid-template-columns:1fr; gap:1rem; padding:1rem; }
-        @media(min-width:700px){ .road-grid { grid-template-columns:repeat(2,1fr); } }
+        .road-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:1rem; padding:1rem; }
+        @media(min-width:700px){ .road-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        .road-card { min-width:0; overflow-wrap:anywhere; }
         .road-card {
             background:rgba(255,255,255,0.05);
             border:1px solid rgba(255,255,255,0.09);
@@ -1703,11 +1722,71 @@
             </div>`;
     }
 
+    let _seasonSnowToDate = null;   // inches at the summit since SEASON_FIRST_SNOW (pre-season only)
+    const _fmtMD = iso => { const d = new Date(iso + 'T12:00:00'); return `${d.toLocaleString('en-US',{month:'short'})} ${d.getDate()}`; };
+
+    // Pre-season: the resort feed's SeasonTotalIn is last winter's number until they reset it on
+    // opening day (281" on 2026-10-29). Measure this fall's snow ourselves instead:
+    //   1. NRCS SNOTEL #642 Morse Lake (5,400 ft, ~2 mi from the summit): sum of daily snow-depth
+    //      increases since Sep 1 — a measured, on-the-ground number (via CORS proxy; NRCS is flaky).
+    //   2. Fallback: Open-Meteo archive daily snowfall at the summit point since Sep 1 (modeled).
+    async function _fetchPreseasonSnow() {
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+        const start = SEASON_FIRST_SNOW < '2026-09-01' ? SEASON_FIRST_SNOW : '2026-09-01';
+        try {
+            const url = `https://wcc.sc.egov.usda.gov/reportGenerator/view_csv/customSingleStationReport/daily/642:WA:SNTL/${start},${today}/SNWD::value`;
+            const PROXIES = ['https://api.codetabs.com/v1/proxy/?quest=', 'https://api.allorigins.win/raw?url='];
+            const text = await Promise.any(PROXIES.map(async px => {
+                const r = await fetch(px + encodeURIComponent(url), { signal: AbortSignal.timeout(12000) });
+                if (!r.ok) throw new Error('proxy ' + r.status);
+                const t = await r.text(); if (!/^Date/m.test(t)) throw new Error('not csv'); return t;
+            }));
+            const rows = text.split('\n').filter(l => /^\d{4}-\d{2}-\d{2},/.test(l)).map(l => l.split(','));
+            let sum = 0, prev = null, first = null;
+            for (const [d, v] of rows) {
+                const depth = parseFloat(v); if (isNaN(depth)) continue;
+                if (prev != null && depth > prev) { sum += depth - prev; if (!first) first = d; }
+                prev = depth;
+            }
+            if (rows.length >= 5) return { inches: sum, source: `NRCS SNOTEL #642 Morse Lake (5,400 ft) · snow-depth gains since ${_fmtMD(first || start)}` };
+        } catch (e) { /* fall through */ }
+        try {
+            const r = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${LAT}&longitude=${LON}&elevation=2095&start_date=${start}&end_date=${today}&daily=snowfall_sum&timezone=${encodeURIComponent(TZ)}`);
+            if (!r.ok) throw new Error('om ' + r.status);
+            const j = await r.json();
+            const cm = (j.daily?.snowfall_sum || []).reduce((a, b) => a + (b || 0), 0);
+            const firstIdx = (j.daily?.snowfall_sum || []).findIndex(v => v > 0.5);
+            const first = firstIdx >= 0 ? j.daily.time[firstIdx] : start;
+            return { inches: cm / 2.54, source: `Open-Meteo modeled snowfall at the summit (6,872 ft) since first snow ${_fmtMD(first)} · SNOTEL unavailable` };
+        } catch (e) { return null; }
+    }
+
     async function fetchSeasonSnow() {
         const el = document.getElementById('season-snow-tracker');
         if (!el) return;
 
         const sr = _sbLive && _sbLive.SnowReport;
+
+        if (_seasonState() === 'preseason') {
+            const pre = await _fetchPreseasonSnow();
+            if (!pre) { el.innerHTML = ''; return; }
+            _seasonSnowToDate = pre.inches;
+            el.innerHTML = `
+            <div style="margin-top:0.9rem;border-top:1px solid rgba(255,255,255,0.07);padding-top:0.8rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem">
+                    <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:#567a96">Snow since first snowfall</span>
+                    <span style="font-size:0.62rem;color:#fbbf24;font-weight:600">Pre-season</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.35rem">
+                    <span style="font-size:1.35rem;font-weight:700;color:white;line-height:1">${Math.round(pre.inches)}"</span>
+                    <span style="font-size:0.68rem;color:#567a96">Season avg ${sr?.AnnualAverageSnowfallIn || 480}" · resort total resets on opening day</span>
+                </div>
+                <div style="font-size:0.58rem;color:#3a5570;text-align:right">${pre.source}</div>
+            </div>`;
+            buildTicker(_sbLive);
+            return;
+        }
+
         const seasonIn = sr ? parseFloat(sr.SeasonTotalIn) || null : null;
         if (seasonIn == null) return;
 
@@ -1858,19 +1937,20 @@
                 ? `<span style="color:#38bdf8">❄️ ${sn.toFixed(1)}" new snow</span>`
                 : `<span class="ski-snow-none">No new snow</span>`;
 
+            const _pre = _seasonState() === 'preseason';
             skiSummaryHtml += `
-                <div class="ski-day ${rating.cls} ${i === 0 ? 'ski-today' : ''}">
+                <div class="ski-day ${_pre ? '' : rating.cls} ${i === 0 ? 'ski-today' : ''}">
                     <div class="ski-day-name">${dName}</div>
                     <div class="ski-day-date">${dDate}</div>
                     <div class="ski-day-icon">${w.icon}</div>
-                    <div class="ski-rating-pill ${rating.pill}">${rating.label}</div>
+                    ${_pre ? `<div class="ski-rating-pill" style="background:rgba(251,191,36,0.12);color:#fbbf24">Pre-season</div>` : `<div class="ski-rating-pill ${rating.pill}">${rating.label}</div>`}
                     <div class="ski-temps">
                         <span class="ski-hi">${fmt(tMax)}</span>
                         <span class="ski-lo"> / ${fmt(tMin)}</span>
                     </div>
                     <div class="ski-snow-line">${snLine}</div>
-                    ${trailHTML(score)}
-                    <div class="ski-note">${rating.note}</div>
+                    ${_pre ? '' : trailHTML(score)}
+                    <div class="ski-note">${_pre ? (sn >= 1 ? 'Base-building snow at the summit.' : tMax > 36 ? 'Warm — no help for the base.' : 'Cold and dry; base holds.') : rating.note}</div>
                 </div>`;
         }
         // ─────────────────────────────────────────────────────────────────────
@@ -1977,7 +2057,10 @@
                         const maxBar = Math.max(summitIn, 60);
                         const basePct   = Math.round(baseIn   / maxBar * 100);
                         const summitPct = Math.round(summitIn / maxBar * 100);
-                        return `
+                        const preNote = _seasonState() === 'preseason'
+                            ? `<div style="font-size:0.62rem;color:#fbbf24;line-height:1.45;margin-bottom:0.6rem">⛷ Pre-season · depths are the resort's feed and may not have been reset since spring; the season total below is measured from this fall's first snowfall.</div>`
+                            : '';
+                        return preNote + `
                         <div style="margin-bottom:0.9rem">
                             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.35rem">
                                 <span style="font-size:2rem;font-weight:700;color:white;line-height:1">${baseIn}"</span>
@@ -2051,8 +2134,9 @@
                 <div class="hourly-wrap">
                     <div class="hourly-row">${hourlyHtml}</div>
                 </div>
-                <div class="section-header" style="margin-top:1rem">🎿 5-Day Ski Conditions Summary</div>
-                <div class="trail-legend">
+                <div class="section-header" style="margin-top:1rem">${_seasonState() === 'preseason' ? '❄️ 5-Day Summit Snow Outlook — Pre-season' : '🎿 5-Day Ski Conditions Summary'}</div>
+                ${_seasonState() === 'preseason' ? `<div style="padding:0 0.25rem 0.6rem;font-size:0.72rem;color:#fbbf24;line-height:1.5">Trail ratings return on opening day (${_openingLabel(true)}). Until then this is what the summit forecast means for the base.</div>` : ''}
+                <div class="trail-legend" ${_seasonState() === 'preseason' ? 'style="display:none"' : ''}>
                     <span style="color:#7ec8e3; font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Trail Ratings:</span>
                     <span class="legend-item"><span class="leg-green"></span> Beginner</span>
                     <span class="legend-item"><span class="leg-blue"></span> Intermediate</span>
@@ -2067,6 +2151,34 @@
     }
 
     let _sbLive = null; // latest mtnpowder Crystal Mountain data, shared with render()
+
+    // ── Season state ──────────────────────────────────────────────────────
+    // Crystal has not announced 2026-27 opening day as of 2026-10-29. Nov 27 is the
+    // projected target reported by TGR / SkierStash / OnTheSnow (not the resort's own
+    // announcement). The live feed's OperatingStatus / open-lift count is what actually
+    // flips the site to "open"; this date only decides what the pre-season copy says.
+    const SEASON_OPENING_TARGET = '2026-11-27';
+    const SEASON_OPENING_CONFIRMED = false;   // flip to true once the resort announces
+    const SEASON_FIRST_SNOW = '2026-09-13';   // first measurable snowfall at the summit this fall (Open-Meteo archive)
+    function _mtnIsOpen(sb) {
+        const s = sb || _sbLive;
+        if (!s) return false;
+        const sr = s.SnowReport || {};
+        return parseInt(sr.TotalOpenLifts || 0) > 0 || /open/i.test(s.OperatingStatus || '');
+    }
+    // 'open' | 'preseason' (closed, before opening target) | 'closed' (closed on/after opening target)
+    function _seasonState(sb) {
+        if (_mtnIsOpen(sb)) return 'open';
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+        return today < SEASON_OPENING_TARGET ? 'preseason' : 'closed';
+    }
+    function _openingLabel(short) {
+        const d = new Date(SEASON_OPENING_TARGET + 'T12:00:00');
+        const ds = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const days = Math.max(0, Math.round((d - new Date(new Date().toLocaleDateString('en-CA', { timeZone: TZ }) + 'T12:00:00')) / 86400000));
+        if (short) return `${ds}${SEASON_OPENING_CONFIRMED ? '' : ' (target)'}`;
+        return `${SEASON_OPENING_CONFIRMED ? 'Opening day' : 'Target opening day'} ${ds} · ${days} day${days === 1 ? '' : 's'} out${SEASON_OPENING_CONFIRMED ? '' : ' · resort has not confirmed'}`;
+    }
 
     // ── Steam Spawner ─────────────────────────────────────────────────────
     let _steamTimer = null;
@@ -2183,12 +2295,17 @@
         // Stats
         const counts = { open:0, hold:0, scheduled:0, closed:0 };
         allLifts.forEach(l => counts[normSt(l)]++);
+        const _st = _seasonState(sb);
         const chips = [
+            _st === 'preseason' ? `<span class="lift-stat-chip lsc-hold">⛷ Pre-season · ${_openingLabel(true)}</span>` : '',
             counts.open      > 0 ? `<span class="lift-stat-chip lsc-open">● ${counts.open} Open</span>` : '',
             counts.hold      > 0 ? `<span class="lift-stat-chip lsc-hold">⚠ ${counts.hold} On Hold</span>` : '',
             counts.scheduled > 0 ? `<span class="lift-stat-chip lsc-sched">◷ ${counts.scheduled} Sched</span>` : '',
-            counts.closed    > 0 ? `<span class="lift-stat-chip lsc-closed">✕ ${counts.closed} Closed</span>` : '',
+            counts.closed    > 0 && _st !== 'preseason' ? `<span class="lift-stat-chip lsc-closed">✕ ${counts.closed} Closed</span>` : '',
         ].filter(Boolean).join('');
+        const preseasonNote = _st === 'preseason'
+            ? `<div style="font-size:0.72rem;color:#fbbf24;line-height:1.5;margin:0.35rem 0 0.6rem">Crystal is not yet open for winter operations — no patrol, no avalanche control, and crews with heavy equipment on the hill. Lifts below show the resort's off-season status, not a daily closure.</div>`
+            : '';
 
         // Lift rows sorted: open → hold → scheduled → closed
         const ORDER = { open:0, hold:1, scheduled:2, closed:3 };
@@ -2228,6 +2345,7 @@
                     <span style="color:#3d6680; font-weight:400">— live via crystalmountainresort.com</span>
                 </div>
                 <div class="lift-stats">${chips}</div>
+                ${preseasonNote}
                 <div class="lift-list">${liftRows}</div>
                 <div style="font-size:0.62rem;color:#3d6680;margin-top:0.5rem">
                     11 lifts · Mt. Rainier Gondola, Chinook Express (6), Rainier Express, Forest Queen Express (6), Green Valley, Quicksilver, Discovery, Gold Hills, Northway, Chair 6 · Lifts typically spin 9 AM–4 PM.
@@ -3764,6 +3882,11 @@
                     <span style="font-weight:700">● Mountain Open</span>
                     <span style="color:#94a3b8">${openLifts} of ${totalLifts} lifts running · On-mountain venues operating</span>
                 </div>`;
+            } else if (_seasonState() === 'preseason') {
+                mountainBanner = `<div style="margin:0.5rem 1rem 0;padding:0.55rem 0.85rem;border-radius:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22);font-size:0.75rem;color:#fbbf24;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+                    <span style="font-weight:700">⛷ Pre-season</span>
+                    <span style="color:#94a3b8">${_openingLabel()} · Resort-run restaurants and bars open with the lifts. Hours below are last winter's pattern for planning only.</span>
+                </div>`;
             } else {
                 mountainBanner = `<div style="margin:0.5rem 1rem 0;padding:0.55rem 0.85rem;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.18);font-size:0.75rem;color:#f87171;display:flex;align-items:center;gap:0.5rem">
                     <span style="font-weight:700">⚠ Mountain Closed</span>
@@ -3853,7 +3976,11 @@
 
                 // Build time-aware status badge
                 let statusBadge, hoursLine;
-                if (!isOpen) {
+                const preseasonVenue = _seasonState() === 'preseason' && !/Crystal Mountain Hotels/.test(v.area);
+                if (preseasonVenue) {
+                    statusBadge = `<span class="food-status-closed" style="background:rgba(251,191,36,0.12);color:#fbbf24">Opens with the lifts</span>`;
+                    hoursLine   = `<div class="food-hours-closed">🕐 Closed until opening day · last winter: ${todayHours || 'closed ' + today}</div>`;
+                } else if (!isOpen) {
                     statusBadge = `<span class="food-status-closed">Closed Today</span>`;
                     hoursLine   = `<div class="food-hours-closed">🕐 Closed ${today}</div>`;
                 } else if (isOpenNow === true) {
@@ -3873,7 +4000,7 @@
                 }
 
                 return `
-                <div class="food-card${isOpen ? '' : ' closed-today'}">
+                <div class="food-card${isOpen && !preseasonVenue ? '' : ' closed-today'}">
                     <div class="food-card-header">
                         <div class="food-name">${v.name}</div>
                         ${statusBadge}
@@ -6471,7 +6598,9 @@
                     <div class="snow-stat"><div class="snow-val">${sr.TotalOpenTrails ?? '—'}<span style="font-size:0.8rem;color:#567a96">/${sr.TotalTrails ?? '—'}</span></div><div class="snow-lbl">Trails open</div></div>
                     <div class="snow-stat"><div class="snow-val">${(sr.SummitArea?.Last24HoursIn && sr.SummitArea.Last24HoursIn !== '--') ? sr.SummitArea.Last24HoursIn + '"' : '—'}</div><div class="snow-lbl">24hr summit</div></div>
                     <div class="snow-stat"><div class="snow-val">${(sr.SnowBaseRangeIn && sr.SnowBaseRangeIn !== '--') ? sr.SnowBaseRangeIn + '"' : '—'}</div><div class="snow-lbl">Base depth</div></div>
-                    <div class="snow-stat"><div class="snow-val">${(sr.SeasonTotalIn && sr.SeasonTotalIn !== '--') ? sr.SeasonTotalIn + '"' : '—'}</div><div class="snow-lbl">Season total</div></div>
+                    ${_seasonState(sb) === 'preseason'
+                        ? `<div class="snow-stat"><div class="snow-val">${_seasonSnowToDate != null ? Math.round(_seasonSnowToDate) + '"' : '—'}</div><div class="snow-lbl">Snow since ${_fmtMD(SEASON_FIRST_SNOW)}</div></div>`
+                        : `<div class="snow-stat"><div class="snow-val">${(sr.SeasonTotalIn && sr.SeasonTotalIn !== '--') ? sr.SeasonTotalIn + '"' : '—'}</div><div class="snow-lbl">Season Total</div></div>`}
                 </div>`;
             container.innerHTML = `
                 <div class="card" style="margin-top:1rem;max-width:760px">
@@ -6513,10 +6642,17 @@
             const base   = sr.SnowBaseRangeIn;
             const season = sr.SeasonTotalIn;
 
-            items.push({ label: '🚡 Lifts', val: `${open} of ${total} open`, cls: open > 0 ? 'ticker-open' : '' });
-            items.push({ label: '🎿 Trails', val: `${trails} open · ${groomed} groomed` });
-            if (base && base !== '--') items.push({ label: '❄️ Base Depth', val: `${base}"` });
-            if (season && season !== '--') items.push({ label: '📊 Season Total', val: `${season}"` });
+            const _st = _seasonState(sbData);
+            if (_st === 'preseason') {
+                items.push({ label: '⛷ Pre-Season', val: _openingLabel(), cls: 'ticker-hold' });
+                items.push({ label: '🚡 Lifts', val: `0 of ${total} · not yet open for the season` });
+                if (_seasonSnowToDate != null) items.push({ label: '📊 Snow Since ' + _fmtMD(SEASON_FIRST_SNOW), val: `${Math.round(_seasonSnowToDate)}" at the summit` });
+            } else {
+                items.push({ label: '🚡 Lifts', val: `${open} of ${total} open`, cls: open > 0 ? 'ticker-open' : '' });
+                items.push({ label: '🎿 Trails', val: `${trails} open · ${groomed} groomed` });
+                if (base && base !== '--') items.push({ label: '❄️ Base Depth', val: `${base}"` });
+                if (season && season !== '--') items.push({ label: '📊 Season Total', val: `${season}"` });
+            }
 
             // On-hold lifts callout
             const onHold = sbData.MountainAreas
@@ -6528,8 +6664,8 @@
             }
         }
 
-        // Crowd forecast
-        {
+        // Crowd forecast — only once the mountain is open
+        if (_seasonState(sbData) === 'open') {
             const now = new Date();
             const dow = now.getDay(); // 0=Sun,1=Mon,...,6=Sat
             const todayStr = now.toISOString().slice(0, 10);
@@ -6593,20 +6729,24 @@
         const _dow = new Date().getDay();
         const _venueH = name => (FOOD_VENUES.find(v => v.name === name) || {}).hours?.[_dow];
 
-        const crpH = _venueH('Rafters');
-        if (crpH) items.push({ label: '🍽 Rafters', val: crpH });
+        if (_seasonState(sbData) === 'open') {
+            const crpH = _venueH('Rafters');
+            if (crpH) items.push({ label: '🍽 Rafters', val: crpH });
 
-        const gmlH = _venueH('The Snorting Elk Cellar');
-        if (gmlH) items.push({ label: '🍺 Snorting Elk', val: gmlH });
+            const gmlH = _venueH('The Snorting Elk Cellar');
+            if (gmlH) items.push({ label: '🍺 Snorting Elk', val: gmlH });
 
-        const shH = _venueH('Summit House');
-        if (shH) items.push({ label: '🏔 Summit House', val: shH });
+            const shH = _venueH('Summit House');
+            if (shH) items.push({ label: '🏔 Summit House', val: shH });
+        }
 
         // Parking — Crystal requires weekend/holiday reservations before noon
-        {
+        if (_seasonState(sbData) === 'open') {
             const d = new Date(); const dow = d.getDay();
             const wknd = dow === 0 || dow === 6;
             items.push({ label: '🅿 Parking', val: wknd ? 'Reservation REQUIRED before noon today (Sat/Sun/holidays)' : 'No reservation needed Mon–Fri · Sat/Sun/holidays reserve before noon', cls: wknd ? 'ticker-hold' : '' });
+        } else {
+            items.push({ label: '🅿 Parking', val: 'Weekend/holiday reservations open about a week before opening day at parking.crystalmountainresort.com' });
         }
 
         // Day tickets — link only; Crystal uses dynamic pricing
