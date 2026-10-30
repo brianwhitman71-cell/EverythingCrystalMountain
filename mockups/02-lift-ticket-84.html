@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2 · Lift Ticket '84 — Everything Crystal Mountain</title>
+<meta name="description" content="Snow conditions, weather forecast, and fun to be found at Crystal Mountain, Washington.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ice:#EAF4FB; --navy:#14213D; --magenta:#FF2D7A; --orange:#FF7A1A; --lemon:#FFD23F; --blue:#1FA7E0; --white:#FFFFFF;
+  --display:"Dela Gothic One", "Arial Black", sans-serif;
+  --body:"Rubik", system-ui, sans-serif;
+  --line:3px;
+}
+*{box-sizing:border-box}
+html{background:var(--ice)}
+body{margin:0;background:var(--ice);color:var(--navy);font:16px/1.45 var(--body);-webkit-font-smoothing:antialiased;padding-bottom:84px}
+img{display:block;max-width:100%}
+a{color:var(--navy)}
+button{font-family:inherit;color:inherit;cursor:pointer}
+h1,h2,h3,h4{margin:0;font-weight:400}
+.display{font-family:var(--display);font-weight:400;line-height:1}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px}
+:focus-visible{outline:var(--line) solid var(--magenta);outline-offset:3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- header ---------- */
+.header{border-bottom:var(--line) solid var(--navy);background:var(--ice)}
+.header .wrap{display:flex;align-items:center;gap:14px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;min-width:0;flex:1 1 0}
+.mark{width:52px;height:52px;flex:0 0 52px}
+.brand h1{font-family:var(--display);font-size:clamp(20px,2.6vw,30px);line-height:1.05}
+.brand p{margin:2px 0 0;font-size:13px;font-weight:500}
+.hdr-right{width:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hdr-right .updated{margin-right:auto}
+.hdr-right .primary{flex:1 1 auto}
+.header .burger{margin-left:auto}
+.updated{font-weight:600;font-size:14px;background:var(--white);border:var(--line) solid var(--navy);padding:6px 10px}
+.stubbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;background:var(--navy);color:var(--ice);font:600 15px/1 var(--body);padding:12px 18px;text-decoration:none;
+  clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px)}
+.stubbtn:focus-visible{outline:0;box-shadow:inset 0 0 0 var(--line) var(--magenta)}
+.stubbtn.primary{background:var(--magenta);color:var(--navy)}
+.stubbtn.ghost{background:var(--white);color:var(--navy);box-shadow:inset 0 0 0 var(--line) var(--navy)}
+.stubbtn.ghost:focus-visible{box-shadow:inset 0 0 0 var(--line) var(--magenta)}
+.stubbtn.active{background:var(--lemon);color:var(--navy)}
+.burger{width:48px;height:48px;background:var(--navy);border:0;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0}
+.burger i{display:block;width:24px;height:3px;background:var(--ice)}
+.burger:focus-visible{outline:var(--line) solid var(--magenta);outline-offset:3px}
+
+/* desktop tab row */
+.header .tabs-desktop{display:none}
+
+/* ---------- ticker ---------- */
+.ticker{background:var(--lemon);border-bottom:var(--line) solid var(--navy);overflow:hidden;white-space:nowrap;font-weight:600;font-size:15px}
+.ticker-track{display:inline-flex;gap:0;animation:tick 70s linear infinite;will-change:transform}
+.ticker:hover .ticker-track{animation-play-state:paused}
+.ticker-track span{display:inline-block;padding:10px 22px;border-right:var(--line) solid var(--navy)}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ---------- grid ---------- */
+.section{padding:28px 0 6px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.grid>*{min-width:0}
+.sec-title{font-family:var(--display);font-size:clamp(24px,3vw,36px);line-height:1.05;margin:0 0 16px}
+.sec-title small{display:block;font:500 14px/1.3 var(--body);margin-top:6px}
+.kicker{display:inline-block;background:var(--navy);color:var(--ice);font:600 13px/1 var(--body);padding:7px 10px}
+.kicker.lemon{background:var(--lemon);color:var(--navy)}
+.kicker.blue{background:var(--blue);color:var(--navy)}
+.kicker.orange{background:var(--orange);color:var(--navy)}
+.kicker.magenta{background:var(--magenta);color:var(--navy)}
+
+/* ---------- hero poster ---------- */
+.hero-wrap{padding-top:24px}
+.poster{position:relative;overflow:hidden;background:var(--navy);border:var(--line) solid var(--navy);height:560px}
+.slides{position:absolute;inset:0}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .5s ease}
+.slide.on{opacity:1}
+.slide img{width:100%;height:100%;object-fit:cover;object-position:center 40%}
+.band{position:absolute;left:-15%;width:130%;bottom:-4%;transform:rotate(-12deg);transform-origin:left center;z-index:2}
+.band i{display:block;height:54px}
+.band i:nth-child(1){background:var(--magenta)}
+.band i:nth-child(2){background:var(--orange)}
+.band i:nth-child(3){background:var(--lemon)}
+.poster-text{position:absolute;left:18px;right:18px;bottom:22px;z-index:3;color:var(--navy)}
+.poster-text .temp{font-family:var(--display);font-size:120px;line-height:.9;letter-spacing:-.02em}
+.poster-text .sub{font-family:var(--display);font-size:22px;line-height:1.1;margin-top:6px;max-width:14ch}
+.poster-text .where{font:600 13px/1.3 var(--body);margin-top:8px;display:inline-block;background:var(--ice);padding:5px 8px;border:var(--line) solid var(--navy)}
+.live{position:absolute;top:14px;left:14px;z-index:3;background:var(--magenta);color:var(--navy);font:700 13px/1 var(--body);padding:8px 10px;display:none;align-items:center;gap:8px;border:var(--line) solid var(--navy)}
+.live.on{display:inline-flex}
+.live b{width:10px;height:10px;background:var(--navy);display:inline-block;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.arrows{position:absolute;top:14px;right:14px;z-index:3;display:flex;gap:6px}
+.arrow{width:44px;height:44px;background:var(--ice);border:var(--line) solid var(--navy);display:grid;place-items:center;padding:0}
+.arrow svg{width:18px;height:18px;stroke:var(--navy);stroke-width:3.5;fill:none;stroke-linecap:square}
+.dots{position:absolute;right:14px;top:66px;z-index:3;display:flex;gap:6px}
+.dot{width:16px;height:16px;background:var(--ice);border:var(--line) solid var(--navy);padding:0}
+.dot[aria-current="true"]{background:var(--lemon)}
+.caption{font-size:13px;font-weight:500;margin:10px 0 0;min-height:1.4em}
+
+/* ---------- ticket stubs ---------- */
+.stub{position:relative;background:var(--white);box-shadow:inset 0 0 0 var(--line) var(--navy);overflow:hidden;padding:var(--line)}
+.stub::before{content:"";position:absolute;top:0;right:0;width:22px;height:22px;background:var(--ice);border-left:var(--line) solid var(--navy);border-bottom:var(--line) solid var(--navy);z-index:2}
+.stub-head{position:relative;padding:14px 18px;border-bottom:var(--line) dashed var(--navy);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.stub-head::before,.stub-head::after{content:"";position:absolute;bottom:-14px;width:22px;height:22px;border-radius:50%;background:var(--ice);border:var(--line) solid var(--navy);z-index:2}
+.stub-head::before{left:-14px}
+.stub-head::after{right:-14px}
+.stub-head h3{font-family:var(--display);font-size:20px;line-height:1.1}
+.stub-head.blue{background:var(--blue)} .stub-head.orange{background:var(--orange)} .stub-head.lemon{background:var(--lemon)} .stub-head.magenta{background:var(--magenta)}
+.stub-body{padding:18px}
+.stub.tilt-a{transform:rotate(-1.2deg)}
+.stub.tilt-b{transform:rotate(1deg)}
+.tilt-pad{padding:8px 6px}
+.stack{display:grid;gap:22px;align-content:start}
+
+/* conditions */
+.cond-top{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.cond-sky{font-family:var(--display);font-size:28px;line-height:1.1}
+.cond-sub{font-size:15px;font-weight:500;margin-top:4px}
+.pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.stat{border-top:var(--line) solid var(--navy);padding-top:8px}
+.stat b{display:block;font-family:var(--display);font-size:20px;line-height:1.1}
+.stat span{font-size:13px;font-weight:500}
+.bignum{font-family:var(--display);font-size:64px;line-height:.95;letter-spacing:-.02em}
+.bignum.sm{font-size:48px}
+.windrow{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.windrow .label{font-family:var(--display);font-size:18px;line-height:1.1}
+.detail{font-size:14px;font-weight:500;margin-top:10px}
+.detail span{display:inline-block;margin-right:14px}
+.moonrow{display:flex;align-items:center;gap:14px}
+.moon{font-size:48px;line-height:1}
+
+/* snow */
+.snow-top{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.snow-top .bignum{font-size:84px}
+.snow-top .meta{font-weight:600;font-size:15px;line-height:1.3}
+.snow-top .meta small{display:block;font-weight:500;font-size:13px;margin-top:4px}
+.src{font-size:13px;font-weight:500;margin-top:10px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.tile{border:var(--line) solid var(--navy);padding:12px 14px;background:var(--ice)}
+.tile.blue{background:var(--blue)} .tile.lemon{background:var(--lemon)}
+.tile b{display:block;font-family:var(--display);font-size:30px;line-height:1}
+.tile span{font-size:13px;font-weight:600}
+.note{margin:14px 0 0;font-size:13px;font-weight:500;border-left:var(--line) solid var(--navy);padding-left:10px}
+.chart{margin-top:18px}
+.chart-title{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;font-size:14px;margin-bottom:8px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:90px;border-bottom:var(--line) solid var(--navy)}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.bar i{display:block;width:100%;background:var(--blue);min-height:3px}
+.bar.f i{background:var(--lemon);border:2px dashed var(--navy)}
+.bar.today i{background:var(--magenta)}
+.bar.div{flex:0 0 0;border-left:3px dashed var(--navy);height:100%}
+.barlabels{display:flex;gap:5px;font-size:11px;font-weight:600;margin-top:5px}
+.barlabels span{flex:1;text-align:center;line-height:1.2}
+.barlabels .div{flex:0 0 3px}
+.barlabels em{display:block;font-style:normal;font-weight:500;font-size:10px}
+.placeholder{margin-top:16px;border:var(--line) dashed var(--navy);padding:12px 14px;font-size:13px;font-weight:500;display:flex;gap:12px;align-items:center}
+.placeholder svg{width:72px;height:36px;flex:0 0 72px}
+
+/* lifts */
+.lift-note{font-size:14px;font-weight:500;margin:0 0 12px}
+.lifts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:0}
+.lifts li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:var(--line) dashed var(--navy);font-weight:600;font-size:15px}
+.lifts li:last-child{border-bottom:0}
+.stamp{font-family:var(--display);font-size:13px;line-height:1;border:var(--line) solid var(--navy);padding:4px 7px;transform:rotate(-6deg);color:var(--navy);flex:0 0 auto}
+.foot{font-size:12.5px;font-weight:500;margin:14px 0 0;opacity:.95}
+
+/* trails */
+.trail-top{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.trail-top .bignum{font-size:56px}
+.trail-top .meta{font-weight:600;font-size:15px}
+.diff{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+.diff>div{display:flex;align-items:center;gap:10px;border:var(--line) solid var(--navy);padding:10px 12px;background:var(--ice)}
+.diff svg{width:28px;height:28px;flex:0 0 28px}
+.diff b{font-family:var(--display);font-size:24px;line-height:1}
+.diff span{font-size:13px;font-weight:600}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pill{background:var(--white);border:var(--line) solid var(--navy);padding:6px 10px;font-size:13px;font-weight:600}
+.pill.lemon{background:var(--lemon)} .pill.blue{background:var(--blue)} .pill.orange{background:var(--orange)} .pill.magenta{background:var(--magenta)} .pill.ice{background:var(--ice)}
+.cap{font-size:13px;font-weight:500;margin:12px 0 0}
+.know{background:var(--lemon);border:var(--line) solid var(--navy);padding:18px;position:relative}
+.know::before{content:"";position:absolute;top:-3px;right:-3px;width:22px;height:22px;background:var(--ice);border-left:var(--line) solid var(--navy);border-bottom:var(--line) solid var(--navy)}
+.know h3{font-family:var(--display);font-size:20px;margin-bottom:10px}
+.know p{margin:0;font-size:14.5px;font-weight:500}
+.know p+p{margin-top:8px}
+
+/* hourly tags on a string */
+.string{position:relative;overflow-x:auto;overflow-y:hidden;padding:14px 4px 16px;scrollbar-width:thin;scrollbar-color:var(--navy) var(--ice)}
+.string::before{content:"";position:absolute;left:0;right:0;top:14px;height:3px;background:var(--navy)}
+.tags{display:flex;gap:10px;width:max-content;padding-top:16px}
+.tag{position:relative;width:78px;background:var(--white);border:var(--line) solid var(--navy);text-align:center;padding:14px 6px 10px;flex:0 0 78px}
+.tag::before{content:"";position:absolute;top:-19px;left:50%;width:3px;height:19px;background:var(--navy);transform:translateX(-50%)}
+.tag::after{content:"";position:absolute;top:5px;left:50%;width:8px;height:8px;border-radius:50%;background:var(--ice);border:2px solid var(--navy);transform:translateX(-50%)}
+.tag .t{font-size:12px;font-weight:700;margin-top:4px}
+.tag .ic{font-size:22px;line-height:1.2;margin:4px 0 2px}
+.tag .ic i{display:inline-block;width:10px;height:10px;background:var(--navy);vertical-align:middle}
+.tag .d{font-family:var(--display);font-size:22px;line-height:1}
+.tag .p{font-size:11px;font-weight:600;margin-top:4px;min-height:1.3em}
+.tag.now{background:var(--magenta)}
+.tag.snow{background:var(--blue)}
+
+/* 5-day */
+.five{display:grid;grid-template-columns:1fr;gap:14px}
+.day{background:var(--white);border:var(--line) solid var(--navy);position:relative}
+.day::before{content:"";position:absolute;top:-3px;right:-3px;width:18px;height:18px;background:var(--ice);border-left:var(--line) solid var(--navy);border-bottom:var(--line) solid var(--navy)}
+.day .dh{padding:10px 14px;border-bottom:var(--line) dashed var(--navy);display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:15px}
+.day .dh.lemon{background:var(--lemon)}
+.day .db{padding:14px}
+.day .ic{font-size:30px;line-height:1}
+.day .hl{font-family:var(--display);font-size:26px;line-height:1;margin-top:8px}
+.day .hl small{font-size:16px}
+.day .sn{font-size:13px;font-weight:600;margin-top:8px}
+.day .q{font-size:13.5px;font-weight:500;margin-top:8px;border-top:var(--line) solid var(--navy);padding-top:8px}
+
+/* 10-day */
+.ten{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.ten .day .db{padding:12px 14px}
+.ten .day .dh{font-size:14px}
+.ten .day .hl{font-size:24px}
+.ten .day .pr{font-size:13px;font-weight:600;margin-top:6px}
+.ten .day .sn{display:inline-block;background:var(--blue);padding:3px 7px;margin-top:8px}
+.ten .day .sn.none{background:var(--ice)}
+.more-days[hidden]{display:none}
+.toggle-row{margin:16px 0 0;display:flex;justify-content:center}
+
+/* footer */
+.footer{margin-top:40px;border-top:var(--line) solid var(--navy);background:var(--white)}
+.footer .wrap{padding-top:22px;padding-bottom:22px;font-size:13px;font-weight:500;display:grid;gap:8px}
+.footer p{margin:0}
+
+/* phone tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--navy);border-top:var(--line) solid var(--navy);display:grid;grid-template-columns:repeat(9,1fr);height:66px;padding-bottom:env(safe-area-inset-bottom)}
+.tabbar a,.tabbar button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ice);text-decoration:none;font:600 8px/1.1 var(--body);text-align:center;letter-spacing:-.01em;background:transparent;border:0;padding:0 1px;min-width:0;overflow:hidden}
+.tabbar .ti{font-size:18px;line-height:1}
+.tabbar .active{background:var(--lemon);color:var(--navy)}
+.tabbar a:focus-visible,.tabbar button:focus-visible{outline:var(--line) solid var(--magenta);outline-offset:-3px}
+
+/* drawer */
+.overlay{position:fixed;inset:0;background:rgba(20,33,61,.55);z-index:50;display:none}
+.overlay.on{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(86vw,360px);background:var(--ice);border-left:var(--line) solid var(--navy);z-index:60;transform:translateX(102%);transition:transform .3s ease;display:flex;flex-direction:column;overflow:auto}
+.drawer.on{transform:none}
+.drawer-head{background:var(--lemon);border-bottom:var(--line) solid var(--navy);padding:16px 18px;display:flex;align-items:center;justify-content:space-between}
+.drawer-head h2{font-family:var(--display);font-size:20px}
+.close{width:44px;height:44px;background:var(--navy);border:0;color:var(--ice);font:700 22px/1 var(--body)}
+.drawer ol{list-style:none;margin:0;padding:8px 0}
+.drawer li a{display:block;padding:12px 18px;text-decoration:none;font-weight:600;font-size:16px;border-bottom:var(--line) dashed var(--navy)}
+.drawer li a:hover{background:var(--white)}
+.drawer li a.active{background:var(--magenta)}
+.drawer-foot{margin-top:auto;padding:14px 18px;font-size:13px;font-weight:500;border-top:var(--line) solid var(--navy)}
+
+/* ---------- desktop ---------- */
+@media (min-width:900px){
+  body{padding-bottom:0}
+  .wrap{padding:0 24px}
+  .hdr-right{width:auto;margin-left:auto;gap:10px}
+  .brand{flex:0 1 auto}
+  .hdr-right .updated{margin-right:0}
+  .hdr-right .primary{flex:0 0 auto}
+  .header .burger{order:3;margin-left:0}
+  .tabbar{display:none}
+  .header .tabs-desktop{display:flex;flex-wrap:wrap;gap:8px;padding-top:0;padding-bottom:16px}
+  .grid{grid-template-columns:repeat(12,minmax(0,1fr));gap:24px}
+  .c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+  .poster{height:720px}
+  .band i{height:82px}
+  .band{bottom:-6%}
+  .poster-text{left:28px;bottom:30px}
+  .poster-text .temp{font-size:200px}
+  .poster-text .sub{font-size:32px;max-width:none}
+  .poster-text .where{font-size:15px}
+  .lifts{grid-template-columns:1fr 1fr;column-gap:28px}
+  .lifts li:nth-last-child(2){border-bottom:0}
+  .five{grid-template-columns:repeat(5,1fr)}
+  .ten{grid-template-columns:repeat(5,1fr)}
+  .diff{grid-template-columns:repeat(4,1fr)}
+  .section{padding:40px 0 8px}
+  .tag{width:84px;flex-basis:84px}
+}
+@media (min-width:1200px){
+  .poster-text .temp{font-size:230px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .ticker-track{animation:none;white-space:normal;display:block}
+  .ticker-track span{display:inline-block;padding:6px 10px;border-right:0}
+  .ticker-track.dup{display:none}
+  .slide{transition:none}
+  .live b{animation:none}
+  .drawer{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Everything Crystal Mountain, home">
+      <svg class="mark" viewBox="0 0 52 52" aria-hidden="true">
+        <rect width="52" height="52" fill="#14213D"/>
+        <circle cx="37" cy="17" r="7" fill="#FFD23F"/>
+        <path d="M2 46 L19 16 L27 29 L33 22 L50 46 Z" fill="#EAF4FB"/>
+        <path d="M19 16 L24 24 L19 28 L14 24 Z" fill="#1FA7E0"/>
+        <path d="M2 46 L10 32 L17 46 Z" fill="#FF2D7A"/>
+      </svg>
+      <div>
+        <h1>Everything Crystal Mountain</h1>
+        <p>Snow conditions, weather forecast, and fun to be found</p>
+      </div>
+    </a>
+    <button class="burger" type="button" id="menuBtn" aria-controls="drawer" aria-expanded="false" aria-label="Open menu"><i></i><i></i><i></i></button>
+    <div class="hdr-right">
+      <span class="updated">Updated 7:46 AM</span>
+      <a class="stubbtn primary" href="#report">Today's Mountain Report</a>
+      <button class="stubbtn ghost" type="button">Refresh</button>
+    </div>
+  </div>
+  <nav class="wrap tabs-desktop" aria-label="Sections">
+    <a class="stubbtn active" href="#top" aria-current="page">🏠 Home</a>
+    <a class="stubbtn" href="#report">🎿 On Mountain</a>
+    <a class="stubbtn" href="#">🍴 Greenwater</a>
+    <a class="stubbtn" href="#">🥂 Fancy Dinner</a>
+    <a class="stubbtn" href="#">🚗 Getting Here</a>
+    <a class="stubbtn" href="#">🍺 Breweries</a>
+    <a class="stubbtn" href="#">🎥 Webcams</a>
+    <a class="stubbtn" href="#">📅 Events</a>
+    <button class="stubbtn" type="button" data-open-menu>≡ More</button>
+  </nav>
+</header>
+
+<div class="ticker" aria-label="Mountain headlines">
+  <div class="ticker-track" id="tickerTrack">
+    <span>⛷ Pre-Season: target opening day Fri, Nov 27 · 28 days out · resort has not confirmed</span>
+    <span>🚡 Lifts: 0 of 11 · not yet open for the season</span>
+    <span>📊 Snow since Sep 13: 19" at the summit</span>
+    <span>🛣 SR-410 to Crystal: Open · no restrictions · bare and wet with light rain</span>
+    <span>⛰ Chinook Pass: Traction tires advised, oversize vehicles prohibited</span>
+    <span>🏔 Rainier: socked in</span>
+    <span>🌤 Conditions: Overcast · Feels like 10°F · Wind 14 mph</span>
+    <span>🅿 Parking: Weekend/holiday reservations open about a week before opening day at parking.crystalmountainresort.com</span>
+    <span>🎟 Tickets: Day tickets &amp; Ikon Pass · buy online, prices rise at the window</span>
+    <span>☎ Guest Services: (833) 279-7895</span>
+  </div>
+</div>
+
+<main id="top">
+
+<!-- ===== HERO + CONDITIONS ===== -->
+<section class="wrap hero-wrap">
+  <div class="grid">
+    <div class="c7">
+      <div class="poster" id="poster" aria-roledescription="carousel" aria-label="Crystal Mountain photos">
+        <div class="slides" id="slides">
+          <div class="slide on" data-live="1">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Mount_Rainier_from_just_north_of_Crystal_Mountain_summit_house_%287_March_2025%29.jpg/1280px-Mount_Rainier_from_just_north_of_Crystal_Mountain_summit_house_%287_March_2025%29.jpg" alt="Mt. Rainier seen from just north of the Summit House" data-caption="Live summit cam · Mt. Rainier from just north of the Summit House · Buidhe, CC BY-SA 4.0">
+          </div>
+          <div class="slide">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Campbell_Basin_ski_run_at_Crystal_Mountain_%287_March_2025%29.jpg/1280px-Campbell_Basin_ski_run_at_Crystal_Mountain_%287_March_2025%29.jpg" alt="Campbell Basin ski run off Chair 6" loading="lazy" data-caption="Campbell Basin off Chair 6, March 2025 · Buidhe, CC BY-SA 4.0">
+          </div>
+          <div class="slide">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Looking_up_the_Northway_lift_on_Crystal_Mountain_%287_March_2025%29.jpg/1280px-Looking_up_the_Northway_lift_on_Crystal_Mountain_%287_March_2025%29.jpg" alt="Looking up the Northway lift" loading="lazy" data-caption="Looking up the Northway lift · Buidhe, CC BY-SA 4.0">
+          </div>
+          <div class="slide">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Top_of_the_gondola_at_Crystal_Mountain_%287_March_2025%29.jpg/1280px-Top_of_the_gondola_at_Crystal_Mountain_%287_March_2025%29.jpg" alt="Top of the Mt. Rainier Gondola" loading="lazy" data-caption="Top of the gondola, 6,872 ft · Buidhe, CC BY-SA 4.0">
+          </div>
+        </div>
+        <span class="live on" id="liveBadge"><b aria-hidden="true"></b>LIVE · summit cam · 7:20 AM</span>
+        <div class="arrows">
+          <button class="arrow" type="button" id="prev" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15 4 L7 12 L15 20"/></svg></button>
+          <button class="arrow" type="button" id="next" aria-label="Next photo"><svg viewBox="0 0 24 24"><path d="M9 4 L17 12 L9 20"/></svg></button>
+        </div>
+        <div class="band" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="poster-text">
+          <div class="temp">22°</div>
+          <div class="sub">Goggles Are Not Optional</div>
+          <div class="where">Summit · 6,872 ft · ☁️ Overcast · Light Snowfall</div>
+        </div>
+        <div class="dots" id="dots" role="tablist" aria-label="Choose photo"></div>
+      </div>
+      <p class="caption" id="caption" aria-live="polite">Live summit cam · Mt. Rainier from just north of the Summit House · Buidhe, CC BY-SA 4.0</p>
+    </div>
+
+    <div class="c5 stack">
+      <article class="stub">
+        <div class="stub-head blue"><h3>Right now at the summit</h3><span class="kicker">6,872 ft</span></div>
+        <div class="stub-body">
+          <div class="cond-top">
+            <div>
+              <div class="cond-sky">☁️ Overcast</div>
+              <div class="cond-sub">Feels like 10°F · Humidity 83% · Visibility 30.6 mi</div>
+            </div>
+          </div>
+          <div class="pillrow">
+            <span class="pill magenta">Light Snowfall</span>
+            <span class="pill ice">🏔 Rainier socked in</span>
+          </div>
+          <div class="statgrid">
+            <div class="stat"><b>29° / 18°</b><span>High / Low</span></div>
+            <div class="stat"><b>33%</b><span>Precip</span></div>
+            <div class="stat"><b>0.5"</b><span>New snow</span></div>
+            <div class="stat"><b>7:45 AM</b><span>Sunrise</span></div>
+            <div class="stat"><b>5:52 PM</b><span>Sunset</span></div>
+            <div class="stat"><b>22°F</b><span>Temperature</span></div>
+          </div>
+        </div>
+      </article>
+
+      <div class="tilt-pad">
+      <article class="stub tilt-a">
+        <div class="stub-head orange"><h3>Wind &amp; sky</h3></div>
+        <div class="stub-body">
+          <div class="windrow">
+            <div class="bignum sm">14 mph</div>
+            <div class="label">Scarves Optional</div>
+          </div>
+          <div class="detail"><span>Direction ← E</span><span>Gusts 22 mph</span><span>Today's max 15 mph</span></div>
+        </div>
+      </article>
+      </div>
+
+      <article class="stub">
+        <div class="stub-head lemon"><h3>Moon</h3><span class="kicker">79%</span></div>
+        <div class="stub-body">
+          <div class="moonrow">
+            <div class="moon" aria-hidden="true">🌔</div>
+            <div>
+              <div class="label display" style="font-size:20px">Waning Gibbous · 79%</div>
+              <div class="detail" style="margin-top:6px"><span>Next full Nov 24</span><span>Next new Nov 9</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SNOW + LIFTS ===== -->
+<section class="wrap section" id="report">
+  <h2 class="sec-title">Today's mountain report <small>Pre-season · Crystal is not yet open for winter operations</small></h2>
+  <div class="grid">
+    <div class="c5">
+      <article class="stub">
+        <div class="stub-head magenta"><h3>Snow report</h3><span class="kicker">Pre-season</span></div>
+        <div class="stub-body">
+          <div class="snow-top">
+            <div class="bignum">19"</div>
+            <div class="meta">Snow since first snowfall · Sep 13<small>Season avg 480" · resort total resets on opening day</small></div>
+          </div>
+          <p class="src">NRCS SNOTEL #642 Morse Lake (5,400 ft) · snow-depth gains since Sep 13</p>
+          <div class="tiles">
+            <div class="tile blue"><b>0.5"</b><span>Next 24hr fcst</span></div>
+            <div class="tile lemon"><b>2.2"</b><span>Next 7 days fcst</span></div>
+          </div>
+          <p class="note">Base depth and 24/48-hr totals return on opening day · Fri, Nov 27 (target). Until then the resort's snow feed is last spring's leftovers, so it is hidden here.</p>
+          <div class="chart">
+            <div class="chart-title"><span>9.0" past 7 days</span><span>Forecast ▸</span></div>
+            <div class="bars" role="img" aria-label="Daily snowfall, past 7 days and 3-day forecast">
+              <div class="bar"><i style="height:0"></i></div>
+              <div class="bar"><i style="height:0"></i></div>
+              <div class="bar"><i style="height:97%"></i></div>
+              <div class="bar"><i style="height:11%"></i></div>
+              <div class="bar"><i style="height:8%"></i></div>
+              <div class="bar"><i style="height:100%"></i></div>
+              <div class="bar"><i style="height:8%"></i></div>
+              <div class="bar today"><i style="height:13%"></i></div>
+              <div class="bar div" aria-hidden="true"></div>
+              <div class="bar f"><i style="height:16%"></i></div>
+              <div class="bar f"><i style="height:4%"></i></div>
+              <div class="bar f"><i style="height:0"></i></div>
+            </div>
+            <div class="barlabels">
+              <span>Th<em>0</em></span><span>Fr<em>0</em></span><span>Sa<em>3.7"</em></span><span>Su<em>0.4"</em></span><span>Mo<em>0.3"</em></span><span>Tu<em>3.8"</em></span><span>We<em>0.3"</em></span><span>Today<em>0.5"</em></span>
+              <span class="div"></span>
+              <span>Fr<em>0.6"</em></span><span>Sa<em>0.1"</em></span><span>Su<em>0</em></span>
+            </div>
+            <p class="cap">Th 10/22 through Su 11/1 · lemon bars are forecast</p>
+          </div>
+          <div class="placeholder">
+            <svg viewBox="0 0 72 36" aria-hidden="true"><path d="M2 32 L20 26 L36 20 L52 12 L70 4" fill="none" stroke="#14213D" stroke-width="3"/><path d="M2 32 L24 30 L44 24 L70 16" fill="none" stroke="#1FA7E0" stroke-width="3" stroke-dasharray="4 3"/></svg>
+            <span>Season so far vs. normal · line chart returns on opening day</span>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="c7">
+      <article class="stub">
+        <div class="stub-head blue"><h3>Lift status</h3><span class="kicker lemon">Pre-season · Fri, Nov 27 (target)</span></div>
+        <div class="stub-body">
+          <p class="lift-note">Crystal is not yet open for winter operations: no patrol, no avalanche control, and crews with heavy equipment on the hill. Lifts below show the resort's off-season status, not a daily closure. Live via crystalmountainresort.com.</p>
+          <ul class="lifts">
+            <li>Discovery <span class="stamp">Closed</span></li>
+            <li>Forest Queen Express <span class="stamp">Closed</span></li>
+            <li>Quicksilver <span class="stamp">Closed</span></li>
+            <li>Gold Hills <span class="stamp">Closed</span></li>
+            <li>Discovery Conveyor <span class="stamp">Closed</span></li>
+            <li>Mt. Rainier Gondola <span class="stamp">Closed</span></li>
+            <li>Chinook Express <span class="stamp">Closed</span></li>
+            <li>Rainier Express <span class="stamp">Closed</span></li>
+            <li>Green Valley <span class="stamp">Closed</span></li>
+            <li>Northway <span class="stamp">Closed</span></li>
+            <li>Chair 6 <span class="stamp">Closed</span></li>
+          </ul>
+          <p class="foot">11 lifts · Mt. Rainier Gondola, Chinook Express (6), Rainier Express, Forest Queen Express (6), Green Valley, Quicksilver, Discovery, Gold Hills, Northway, Chair 6 · Lifts typically spin 9 AM–4 PM.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TRAILS ===== -->
+<section class="wrap section">
+  <div class="grid">
+    <div class="c8">
+      <div class="tilt-pad">
+      <article class="stub tilt-b">
+        <div class="stub-head orange"><h3>Trail map &amp; terrain</h3><a class="kicker" href="https://www.crystalmountainresort.com/the-mountain/mountain-report" rel="noopener">Live report ↗</a></div>
+        <div class="stub-body">
+          <div class="trail-top">
+            <div class="bignum">0 <small style="font-size:.45em">of 85</small></div>
+            <div class="meta">trails open (0%)</div>
+          </div>
+          <div class="diff">
+            <div><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="#2DA44E"/></svg><div><b>7</b><br><span>Beginner</span></div></div>
+            <div><svg viewBox="0 0 28 28" aria-hidden="true"><rect x="3" y="3" width="22" height="22" fill="#1FA7E0"/></svg><div><b>27</b><br><span>Intermediate</span></div></div>
+            <div><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 1 L27 14 L14 27 L1 14 Z" fill="#14213D"/></svg><div><b>27</b><br><span>Advanced</span></div></div>
+            <div><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M8 3 L17 14 L8 25 L0 14 Z" fill="#14213D"/><path d="M20 3 L28 14 L20 25 L12 14 Z" fill="#14213D"/></svg><div><b>25</b><br><span>Expert</span></div></div>
+          </div>
+          <div class="pills">
+            <span class="pill">Broadway</span><span class="pill">Discover Meadow</span><span class="pill">Lower Arwine's</span><span class="pill">Queens</span><span class="pill">Quicksilver</span><span class="pill">Snow Garden</span><span class="pill">Tinkerbell</span>
+          </div>
+          <p class="cap">a reported open in today's resort feed · 2,600 acres, 3,100 ft vertical, 85 named runs + Southback bowls</p>
+        </div>
+      </article>
+      </div>
+    </div>
+    <div class="c4">
+      <aside class="know">
+        <h3>Know before you go</h3>
+        <p>Northway and the Southback (Silver Basin, A-Basin, Silver King) are avalanche-controlled but ungroomed, expert-only zones. Gates open only when patrol clears them.</p>
+        <p>Chair 6 and Northway are old fixed-grip doubles; expect lines on powder days.</p>
+        <p>Ikon Base has blackout dates; parking reservations are required Sat/Sun/holidays before noon.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOURLY ===== -->
+<section class="wrap section">
+  <h2 class="sec-title">Next 24 hours <small>Summit forecast, hour by hour · tap and drag to scroll</small></h2>
+  <div class="string">
+    <div class="tags" id="tags"></div>
+  </div>
+</section>
+
+<!-- ===== 5-DAY ===== -->
+<section class="wrap section">
+  <h2 class="sec-title">5-day summit snow outlook <small>Trail ratings return on opening day (Fri, Nov 27 (target)). Until then this is what the summit forecast means for the base.</small></h2>
+  <div class="five">
+    <article class="day"><div class="dh lemon"><span>Today 10/30</span><span class="kicker">Pre-season</span></div><div class="db"><div class="ic">❄️</div><div class="hl">29° <small>/ 18°</small></div><div class="sn">0.5" new snow</div><div class="q">Cold and dry; base holds.</div></div></article>
+    <article class="day"><div class="dh"><span>Tmrw 10/31</span></div><div class="db"><div class="ic">☁️</div><div class="hl">31° <small>/ 19°</small></div><div class="sn">No new snow</div><div class="q">Cold and dry; base holds.</div></div></article>
+    <article class="day"><div class="dh"><span>Sun 11/1</span></div><div class="db"><div class="ic">☁️</div><div class="hl">33° <small>/ 17°</small></div><div class="sn">No new snow</div><div class="q">Cold and dry; base holds.</div></div></article>
+    <article class="day"><div class="dh"><span>Mon 11/2</span></div><div class="db"><div class="ic">☁️</div><div class="hl">37° <small>/ 17°</small></div><div class="sn">No new snow</div><div class="q">Warm: no help for the base.</div></div></article>
+    <article class="day"><div class="dh"><span>Tue 11/3</span></div><div class="db"><div class="ic">☁️</div><div class="hl">40° <small>/ 25°</small></div><div class="sn">No new snow</div><div class="q">Warm: no help for the base.</div></div></article>
+  </div>
+  <p class="cap">In season each card carries a ski-quality rating and recommended trails.</p>
+</section>
+
+<!-- ===== 10-DAY ===== -->
+<section class="wrap section">
+  <h2 class="sec-title">10-day outlook <small>Summit highs and lows, snow and precipitation chance</small></h2>
+  <div class="ten" id="tenGrid"></div>
+  <div class="ten more-days" id="moreDays" hidden></div>
+  <div class="toggle-row"><button class="stubbtn" type="button" id="moreBtn" aria-expanded="false" aria-controls="moreDays">Show days 11–15 ▾</button></div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p>Weather data: Open-Meteo · Forecast point: Crystal Mountain summit (46.928°N, 121.503°W, 6,872 ft, top of the Mt. Rainier Gondola) · Base village 4,400 ft</p>
+    <p>Photos: Buidhe via Wikimedia Commons, CC BY-SA 4.0 · Not affiliated with Crystal Mountain Resort</p>
+  </div>
+</footer>
+
+<nav class="tabbar" aria-label="Sections">
+  <a href="#top" class="active" aria-current="page"><span class="ti">🏠</span>Home</a>
+  <a href="#report"><span class="ti">🎿</span>On Mountain</a>
+  <a href="#"><span class="ti">🍴</span>Greenwater</a>
+  <a href="#"><span class="ti">🥂</span>Fancy Dinner</a>
+  <a href="#"><span class="ti">🚗</span>Getting Here</a>
+  <a href="#"><span class="ti">🍺</span>Breweries</a>
+  <a href="#"><span class="ti">🎥</span>Webcams</a>
+  <a href="#"><span class="ti">📅</span>Events</a>
+  <button type="button" data-open-menu><span class="ti">≡</span>More</button>
+</nav>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-label="All pages">
+  <div class="drawer-head"><h2>All 15 pages</h2><button class="close" type="button" id="closeBtn" aria-label="Close menu">×</button></div>
+  <ol>
+    <li><a href="#top" class="active">Home</a></li>
+    <li><a href="#report">Mountain Report</a></li>
+    <li><a href="#">Eat &amp; Drink on the Mountain</a></li>
+    <li><a href="#">Eat in Greenwater &amp; Enumclaw</a></li>
+    <li><a href="#">Fancy Dinners</a></li>
+    <li><a href="#">Farmers Markets</a></li>
+    <li><a href="#">Getting Here</a></li>
+    <li><a href="#">Breweries</a></li>
+    <li><a href="#">Dispensaries</a></li>
+    <li><a href="#">Lodging</a></li>
+    <li><a href="#">Local PNW Goods</a></li>
+    <li><a href="#">Webcams</a></li>
+    <li><a href="#">Other Fun Winter Activities</a></li>
+    <li><a href="#">Events</a></li>
+    <li><a href="#">Mt. Rainier National Park</a></li>
+  </ol>
+  <div class="drawer-foot">Guest Services (833) 279-7895 · Updated 7:46 AM</div>
+</aside>
+
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ticker: duplicate once for a seamless loop */
+  var track = document.getElementById('tickerTrack');
+  if (!reduce) {
+    var dup = track.cloneNode(true); dup.id = ''; dup.classList.add('dup'); dup.setAttribute('aria-hidden','true');
+    track.parentNode.appendChild(dup);
+    track.parentNode.style.display = 'flex';
+  }
+
+  /* carousel */
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var dots = document.getElementById('dots');
+  var caption = document.getElementById('caption');
+  var live = document.getElementById('liveBadge');
+  var idx = 0, timer;
+  slides.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.className = 'dot'; b.type = 'button'; b.setAttribute('role','tab');
+    b.setAttribute('aria-label', 'Photo ' + (i+1) + ' of ' + slides.length);
+    b.addEventListener('click', function(){ go(i); restart(); });
+    dots.appendChild(b);
+  });
+  function go(n){
+    idx = (n + slides.length) % slides.length;
+    slides.forEach(function(s, i){ s.classList.toggle('on', i === idx); });
+    Array.prototype.forEach.call(dots.children, function(d, i){ d.setAttribute('aria-current', i === idx ? 'true' : 'false'); });
+    caption.textContent = slides[idx].querySelector('img').getAttribute('data-caption');
+    live.classList.toggle('on', !!slides[idx].getAttribute('data-live'));
+  }
+  function restart(){ clearInterval(timer); timer = setInterval(function(){ go(idx+1); }, 5000); }
+  document.getElementById('prev').addEventListener('click', function(){ go(idx-1); restart(); });
+  document.getElementById('next').addEventListener('click', function(){ go(idx+1); restart(); });
+  var poster = document.getElementById('poster');
+  poster.addEventListener('mouseenter', function(){ clearInterval(timer); });
+  poster.addEventListener('mouseleave', restart);
+  poster.addEventListener('focusin', function(){ clearInterval(timer); });
+  poster.addEventListener('focusout', restart);
+  go(0); restart();
+
+  /* hourly tags */
+  var hours = [
+    ['NOW','22','☁️','17%'],['8am','22','☁️',''],['9am','24','☁️',''],['10am','26','🌤',''],['11am','27','❄️','0.08" · 29%'],
+    ['12pm','28','🌤',''],['1pm','28','🌤',''],['2pm','27','☁️','27%'],['3pm','26','☁️',''],['4pm','25','☁️',''],
+    ['5pm','23','☁️',''],['6pm','21','☁️',''],['7pm','20','☁️',''],['8pm','19','',''],['9pm','18','',''],
+    ['10pm','17','',''],['11pm','17','',''],['12am','17','',''],['1am','16','',''],['2am','16','',''],
+    ['3am','16','',''],['4am','15','',''],['5am','15','',''],['6am','15','','']
+  ];
+  var tags = document.getElementById('tags');
+  hours.forEach(function(h){
+    var d = document.createElement('div');
+    d.className = 'tag' + (h[0]==='NOW' ? ' now' : '') + (h[2]==='❄️' ? ' snow' : '');
+    d.innerHTML = '<div class="t">' + h[0] + '</div><div class="ic">' + (h[2] || '<i aria-hidden="true"></i>') + '</div><div class="d">' + h[1] + '°</div><div class="p">' + h[3] + '</div>';
+    tags.appendChild(d);
+  });
+
+  /* 10-day */
+  var ten = [
+    ['Today 10/30','❄️','29','18','❄ 0.5"','33%'],['Fri 10/31','☁️','31','19','','14%'],['Sat 11/1','☁️','33','17','','12%'],
+    ['Sun 11/2','☁️','37','17','',''],['Mon 11/3','☁️','40','25','','20%'],['Tue 11/4','☁️','36','22','',''],
+    ['Wed 11/5','☁️','38','25','','28%'],['Thu 11/6','🌧','29','17','❄ 2.2"','25%'],['Fri 11/7','☁️','29','15','','29%'],['Sat 11/8','☁️','36','22','','39%']
+  ];
+  var more = [
+    ['Sun 11/9','☁️','34','24','','35%'],['Mon 11/10','❄️','28','22','❄ 2.1"','61%'],['Tue 11/11','❄️','30','22','❄ 4.5"','77%'],
+    ['Wed 11/12','❄️','26','15','❄ 8.5"','77%'],['Thu 11/13','❄️','26','13','❄ 0.6"','56%']
+  ];
+  function dayCard(d, first){
+    return '<article class="day"><div class="dh' + (first ? ' lemon' : '') + '"><span>' + d[0] + '</span><span>' + d[1] + '</span></div>' +
+      '<div class="db"><div class="hl">' + d[2] + '° <small>/ ' + d[3] + '°</small></div>' +
+      '<div class="pr">' + (d[5] ? 'Precip ' + d[5] : 'Precip chance low') + '</div>' +
+      '<div class="sn' + (d[4] ? '' : ' none') + '">' + (d[4] || 'no snow') + '</div></div></article>';
+  }
+  document.getElementById('tenGrid').innerHTML = ten.map(function(d,i){ return dayCard(d, i===0); }).join('');
+  var moreEl = document.getElementById('moreDays');
+  moreEl.innerHTML = more.map(function(d){ return dayCard(d, false); }).join('');
+  var moreBtn = document.getElementById('moreBtn');
+  moreBtn.addEventListener('click', function(){
+    var open = moreEl.hasAttribute('hidden');
+    if (open) { moreEl.removeAttribute('hidden'); } else { moreEl.setAttribute('hidden',''); }
+    moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    moreBtn.textContent = open ? 'Hide days 11–15 ▴' : 'Show days 11–15 ▾';
+  });
+
+  /* drawer */
+  var drawer = document.getElementById('drawer'), overlay = document.getElementById('overlay');
+  var menuBtn = document.getElementById('menuBtn'), closeBtn = document.getElementById('closeBtn');
+  var lastFocus;
+  function openMenu(){
+    lastFocus = document.activeElement;
+    drawer.classList.add('on'); overlay.classList.add('on');
+    drawer.setAttribute('aria-hidden','false'); menuBtn.setAttribute('aria-expanded','true');
+    closeBtn.focus();
+  }
+  function closeMenu(){
+    drawer.classList.remove('on'); overlay.classList.remove('on');
+    drawer.setAttribute('aria-hidden','true'); menuBtn.setAttribute('aria-expanded','false');
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  menuBtn.addEventListener('click', openMenu);
+  Array.prototype.forEach.call(document.querySelectorAll('[data-open-menu]'), function(b){ b.addEventListener('click', openMenu); });
+  closeBtn.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && drawer.classList.contains('on')) closeMenu(); });
+})();
+</script>
+</body>
+</html>
