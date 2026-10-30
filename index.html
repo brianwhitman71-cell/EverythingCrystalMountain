@@ -1730,10 +1730,21 @@
     //   1. NRCS SNOTEL #642 Morse Lake (5,400 ft, ~2 mi from the summit): sum of daily snow-depth
     //      increases since Sep 1 — a measured, on-the-ground number (via CORS proxy; NRCS is flaky).
     //   2. Fallback: Open-Meteo archive daily snowfall at the summit point since Sep 1 (modeled).
-    async function _fetchPreseasonSnow() {
+    // Both sources are fetched at once. Open-Meteo answers in about a second; the SNOTEL proxies can
+    // take 12+ s to fail, so the first result paints immediately and a later SNOTEL answer upgrades it.
+    function _fetchPreseasonSnow(onUpgrade) {
         const today = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
         const start = SEASON_FIRST_SNOW < '2026-09-01' ? SEASON_FIRST_SNOW : '2026-09-01';
-        try {
+        const snotelP = _fetchSnotelFallSnow(start, today).catch(() => null);
+        const omP     = _fetchOpenMeteoFallSnow(start, today).catch(() => null);
+        const ok = p => p.then(v => { if (!v) throw new Error('no data'); return v; });
+        return Promise.any([ok(snotelP), ok(omP)]).then(first => {
+            if (!first.measured && onUpgrade) snotelP.then(v => { if (v) onUpgrade(v); });
+            return first;
+        }).catch(() => null);
+    }
+    async function _fetchSnotelFallSnow(start, today) {
+        {
             const url = `https://wcc.sc.egov.usda.gov/reportGenerator/view_csv/customSingleStationReport/daily/642:WA:SNTL/${start},${today}/SNWD::value`;
             const PROXIES = ['https://api.codetabs.com/v1/proxy/?quest=', 'https://api.allorigins.win/raw?url='];
             const text = await Promise.any(PROXIES.map(async px => {
@@ -1748,17 +1759,36 @@
                 if (prev != null && depth > prev) { sum += depth - prev; if (!first) first = d; }
                 prev = depth;
             }
-            if (rows.length >= 5) return { inches: sum, source: `NRCS SNOTEL #642 Morse Lake (5,400 ft) · snow-depth gains since ${_fmtMD(first || start)}` };
-        } catch (e) { /* fall through */ }
-        try {
+            if (rows.length >= 5) return { inches: sum, measured: true, source: `NRCS SNOTEL #642 Morse Lake (5,400 ft) · snow-depth gains since ${_fmtMD(first || start)}` };
+            return null;
+        }
+    }
+    async function _fetchOpenMeteoFallSnow(start, today) {
+        {
             const r = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${LAT}&longitude=${LON}&elevation=2095&start_date=${start}&end_date=${today}&daily=snowfall_sum&timezone=${encodeURIComponent(TZ)}`);
             if (!r.ok) throw new Error('om ' + r.status);
             const j = await r.json();
             const cm = (j.daily?.snowfall_sum || []).reduce((a, b) => a + (b || 0), 0);
             const firstIdx = (j.daily?.snowfall_sum || []).findIndex(v => v > 0.5);
             const first = firstIdx >= 0 ? j.daily.time[firstIdx] : start;
-            return { inches: cm / 2.54, source: `Open-Meteo modeled snowfall at the summit (6,872 ft) since first snow ${_fmtMD(first)} · SNOTEL unavailable` };
-        } catch (e) { return null; }
+            return { inches: cm / 2.54, measured: false, source: `Open-Meteo modeled snowfall at the summit (6,872 ft) since first snow ${_fmtMD(first)} · SNOTEL pending` };
+        }
+    }
+    function _renderPreseasonSnow(el, pre, sr) {
+        _seasonSnowToDate = pre.inches;
+        el.innerHTML = `
+            <div style="margin-top:0.4rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem">
+                    <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:#567a96">Snow since first snowfall · ${_fmtMD(SEASON_FIRST_SNOW)}</span>
+                    <span style="font-size:0.62rem;color:#fbbf24;font-weight:600">Pre-season</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.35rem;gap:0.6rem;flex-wrap:wrap">
+                    <span style="font-size:2rem;font-weight:700;color:white;line-height:1">${Math.round(pre.inches)}"</span>
+                    <span style="font-size:0.68rem;color:#567a96">Season avg ${sr?.AnnualAverageSnowfallIn || 480}" · resort total resets on opening day</span>
+                </div>
+                <div style="font-size:0.58rem;color:#3a5570;text-align:right">${pre.source}</div>
+            </div>`;
+        buildTicker(_sbLive);
     }
 
     async function fetchSeasonSnow() {
@@ -1768,22 +1798,10 @@
         const sr = _sbLive && _sbLive.SnowReport;
 
         if (_seasonState() === 'preseason') {
-            const pre = await _fetchPreseasonSnow();
-            if (!pre) { el.innerHTML = ''; return; }
-            _seasonSnowToDate = pre.inches;
-            el.innerHTML = `
-            <div style="margin-top:0.9rem;border-top:1px solid rgba(255,255,255,0.07);padding-top:0.8rem">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem">
-                    <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:#567a96">Snow since first snowfall</span>
-                    <span style="font-size:0.62rem;color:#fbbf24;font-weight:600">Pre-season</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.35rem">
-                    <span style="font-size:1.35rem;font-weight:700;color:white;line-height:1">${Math.round(pre.inches)}"</span>
-                    <span style="font-size:0.68rem;color:#567a96">Season avg ${sr?.AnnualAverageSnowfallIn || 480}" · resort total resets on opening day</span>
-                </div>
-                <div style="font-size:0.58rem;color:#3a5570;text-align:right">${pre.source}</div>
-            </div>`;
-            buildTicker(_sbLive);
+            const upgrade = v => { const e = document.getElementById('season-snow-tracker'); if (e) _renderPreseasonSnow(e, v, sr); };
+            const pre = await _fetchPreseasonSnow(upgrade);
+            if (!pre) { el.innerHTML = `<div style="font-size:0.62rem;color:#567a96;margin-top:0.4rem">Fall snowfall unavailable right now.</div>`; return; }
+            _renderPreseasonSnow(el, pre, sr);
             return;
         }
 
@@ -1875,8 +1893,11 @@
 
         // Daily cards
         const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        let dailyHtml = '';
+        let dailyHtml = '', dailyCount = 0;
         for (let i = T; i < daily.time.length; i++) {
+            // Open-Meteo's last forecast day sometimes carries snow/precip but null temperatures; skip it.
+            if (daily.temperature_2m_max[i] == null || daily.temperature_2m_min[i] == null) continue;
+            dailyCount++;
             const d = new Date(daily.time[i] + 'T12:00:00');
             const dayLabel = i === T ? 'Today' : i === T + 1 ? 'Tmrw' : DAYS[d.getDay()];
             const dateLabel = `${d.getMonth()+1}/${d.getDate()}`;
@@ -2057,10 +2078,17 @@
                         const maxBar = Math.max(summitIn, 60);
                         const basePct   = Math.round(baseIn   / maxBar * 100);
                         const summitPct = Math.round(summitIn / maxBar * 100);
-                        const preNote = _seasonState() === 'preseason'
-                            ? `<div style="font-size:0.62rem;color:#fbbf24;line-height:1.45;margin-bottom:0.6rem">⛷ Pre-season · depths are the resort's feed and may not have been reset since spring; the season total below is measured from this fall's first snowfall.</div>`
-                            : '';
-                        return preNote + `
+                        const pre = _seasonState() === 'preseason';
+                        // Pre-season the feed's depths and 24/48-hr cells are stale leftovers from spring, so the
+                        // card leads with one honest number (snow since first snowfall, filled in by fetchSeasonSnow)
+                        // plus the modeled next-24hr forecast, and says when the real depths come back.
+                        const preHtml = `
+                        <div class="snow-grid" style="margin-top:0.8rem">
+                            <div class="snow-stat"><div class="snow-val">${next24Snow >= 0.1 ? next24Snow.toFixed(1) + '"' : '0"'}</div><div class="snow-lbl">Next 24hr Fcst</div></div>
+                            <div class="snow-stat"><div class="snow-val">${week7Snow >= 0.1 ? week7Snow.toFixed(1) + '"' : '0"'}</div><div class="snow-lbl">Next 7 Days Fcst</div></div>
+                        </div>
+                        <div style="font-size:0.62rem;color:#fbbf24;line-height:1.45;margin-top:0.7rem">⛷ Base depth and 24/48-hr totals return on opening day · ${_openingLabel(true)}. Until then the resort's snow feed is last spring's leftovers, so it is hidden here.</div>`;
+                        const inSeasonHtml = `
                         <div style="margin-bottom:0.9rem">
                             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.35rem">
                                 <span style="font-size:2rem;font-weight:700;color:white;line-height:1">${baseIn}"</span>
@@ -2082,8 +2110,9 @@
                             <div class="snow-stat"><div class="snow-val">${new24base > 0 ? new24base.toFixed(1) + '"' : '—'}</div><div class="snow-lbl">24hr Base</div></div>
                             <div class="snow-stat"><div class="snow-val">${new48sum > 0 ? new48sum.toFixed(1) + '"' : '—'}</div><div class="snow-lbl">48hr Summit</div></div>
                             <div class="snow-stat"><div class="snow-val">${stormIn > 0 ? stormIn + '"' : next24Snow >= 0.1 ? next24Snow.toFixed(1) + '"' : '—'}</div><div class="snow-lbl">${stormIn > 0 ? 'Storm Total' : 'Next 24hr Fcst'}</div></div>
-                        </div>
-                        <div id="season-snow-tracker">${_loadingHtml('Season data…')}</div>
+                        </div>`;
+                        return (pre ? '' : inSeasonHtml) + `
+                        <div id="season-snow-tracker">${_loadingHtml(pre ? 'Measuring this fall\'s snow…' : 'Season data…')}</div>` + (pre ? preHtml : '') + `
                         ${(() => {
                             const sparkDays = 11, sparkStart = 0;
                             const sparkData = [];
@@ -2145,7 +2174,7 @@
                     <span style="color:#3d6680; margin-left:auto; font-size:0.6rem">Filled = recommended &nbsp;·&nbsp; Dim = skiable with caution</span>
                 </div>
                 <div class="ski-summary">${skiSummaryHtml}</div>
-                <div class="section-header" style="margin-top:1rem">📅 ${daily.time.length}-Day Outlook</div>
+                <div class="section-header" style="margin-top:1rem">📅 ${dailyCount}-Day Outlook</div>
                 <div class="daily-grid">${dailyHtml}</div>
             </div>`;
     }
