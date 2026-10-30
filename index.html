@@ -486,6 +486,31 @@
                 rgba(0,0,0,0.55) 100%);
             pointer-events: none;
         }
+        .summer-fold { margin-bottom: 1.5rem; border: 1px dashed rgba(251,191,36,0.35); border-radius: 12px; background: rgba(251,191,36,0.04); }
+        .summer-fold > summary { cursor: pointer; list-style: none; padding: 0.8rem 1rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; color: #fde68a; font-weight: 700; font-size: 0.85rem; }
+        .summer-fold > summary::-webkit-details-marker { display: none; }
+        .summer-fold > summary .sf-sub { font-weight: 400; font-size: 0.72rem; color: #90cdf4; flex: 1 1 100%; }
+        .summer-fold > summary .sf-arrow { margin-left: auto; color: #fbbf24; transition: transform .2s; }
+        .summer-fold[open] > summary .sf-arrow { transform: rotate(180deg); }
+        .summer-fold > .sf-body { padding: 0 1rem 0.5rem; }
+        .rank-badge { display: inline-block; min-width: 1.6em; text-align: center; margin-right: 0.35rem; padding: 0.05rem 0.4rem; border-radius: 999px; background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.35); color: #fde68a; font-size: 0.68rem; font-weight: 800; vertical-align: middle; }
+        .webcam-ref { font-size: 0.6rem; font-weight: 600; color: #94a3b8; }
+        .webcam-ref.live { color: #4ade80; }
+        .webcam-ref.asleep { color: #94a3b8; }
+        .card-filter { display: flex; gap: 0.4rem; flex-wrap: wrap; padding: 0 1rem 0.75rem; }
+        .card-filter .evt-filter-btn { font-size: 0.7rem; }
+        .lodge-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 0.5rem; }
+        .lodge-price { text-align: right; flex: 0 1 45%; max-width: 45%; margin-left: 1rem; min-width: 0; }
+        @media (max-width: 480px) {
+            .lodge-head { flex-wrap: wrap; }
+            .lodge-price { flex: 1 0 100%; max-width: 100%; margin-left: 0; text-align: left; display: flex; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
+        }
+        .carousel-wordmark { display: none; }
+        @media (max-width: 480px) {
+            .carousel-wordmark { display: block; position: absolute; left: 12px; right: 12px; bottom: 26px; z-index: 2; pointer-events: none; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
+            .carousel-wordmark span { display: block; font-size: 1.15rem; font-weight: 800; color: white; letter-spacing: -0.01em; line-height: 1.1; }
+            .carousel-wordmark small { display: block; font-size: 0.62rem; color: #cfe9ff; margin-top: 0.15rem; letter-spacing: 0.08em; text-transform: uppercase; }
+        }
         .carousel-live {
             position: absolute; top: 10px; left: 12px; z-index: 3;
             display: inline-flex; align-items: center; gap: 0.35rem;
@@ -547,7 +572,7 @@
         }
         .carousel-dot.active { background: white; transform: scale(1.3); }
         @media (max-width: 600px) {
-            .photo-carousel { height: 140px; border-radius: 10px; }
+            .photo-carousel { height: 230px; border-radius: 12px; }
         }
 
         /* Nav drawer */
@@ -1850,12 +1875,7 @@
     async function _fetchSnotelFallSnow(start, today) {
         {
             const url = `https://wcc.sc.egov.usda.gov/reportGenerator/view_csv/customSingleStationReport/daily/642:WA:SNTL/${start},${today}/SNWD::value`;
-            const PROXIES = ['https://api.codetabs.com/v1/proxy/?quest=', 'https://api.allorigins.win/raw?url='];
-            const text = await Promise.any(PROXIES.map(async px => {
-                const r = await fetch(px + encodeURIComponent(url), { signal: AbortSignal.timeout(12000) });
-                if (!r.ok) throw new Error('proxy ' + r.status);
-                const t = await r.text(); if (!/^Date/m.test(t)) throw new Error('not csv'); return t;
-            }));
+            const text = await _proxyText(url, { validate: t => /^Date/m.test(t) });
             const rows = text.split('\n').filter(l => /^\d{4}-\d{2}-\d{2},/.test(l)).map(l => l.split(','));
             let sum = 0, prev = null, first = null;
             for (const [d, v] of rows) {
@@ -1920,15 +1940,13 @@
 
         // Try SNOTEL for a more precise historical median (SWE-derived)
         try {
-            const now = new Date();
+            const now = _pacDate();
             const wyYear = now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1;
             const wyStart = `${wyYear}-10-01`;
-            const today = now.toISOString().split('T')[0];
+            const today = _pacNow().date;
             // SNOTEL site #642:WA:SNTL — "Morse Lake" near Crystal Mountain summit (closest active SNOTEL to the resort)
             const url = `https://wcc.sc.egov.usda.gov/reportGenerator/view_csv/customSingleStationReport/daily/642:WA:SNTL/${wyStart},${today}/PREC::value,PREC::median`;
-            const resp = await fetch('https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url));
-            if (!resp.ok) throw new Error('proxy error');
-            const text = await resp.text();
+            const text = await _proxyText(url, { validate: t => /^Date/m.test(t) });
             const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('#') && !l.toLowerCase().startsWith('date'));
             if (!lines.length) throw new Error('no data');
             const cols = lines[lines.length - 1].split(',');
@@ -1943,6 +1961,48 @@
         } catch(e) {
             // SNOTEL unavailable — hardcoded average already shown
         }
+    }
+
+    // ── Pacific wall-clock ───────────────────────────────────────────────
+    // Everything that says "open now", "today", or "NOW" on this site is about Crystal Mountain,
+    // so it must use Pacific time — not the viewer's device clock (which is 3 h off in Atlanta).
+    function _pacParts() {
+        const f = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', weekday: 'short' });
+        const o = {}; for (const { type, value } of f.formatToParts(new Date())) o[type] = value;
+        return o;
+    }
+    // A Date whose getHours()/getDay()/getMonth()/getDate() read as Pacific time (the "shifted" Date trick).
+    function _pacDate() {
+        const o = _pacParts();
+        return new Date(+o.year, +o.month - 1, +o.day, +o.hour % 24, +o.minute, +o.second);
+    }
+    function _pacNow() {
+        const d = _pacDate();
+        const pad = n => String(n).padStart(2, '0');
+        return { date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, dow: d.getDay(), hour: d.getHours(), mins: d.getHours() * 60 + d.getMinutes(), d };
+    }
+    function _pacMins() { return _pacNow().mins; }
+    function _pacAddDays(n) { const d = _pacDate(); d.setDate(d.getDate() + n); const pad = x => String(x).padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+    function _isWinterNow() { const m = _pacDate().getMonth() + 1; return m >= 11 || m <= 4; }
+    function _isParkWinterNow() { const m = _pacDate().getMonth() + 1; return m >= 10 || m <= 5; }   // park high roads closed Oct–May
+
+    // ── Same-origin proxy (worker.js /api/proxy) with public fallbacks ────
+    // Our own Worker proxy answers first; the public CORS proxies only matter if it is down or
+    // the page is being served from somewhere other than the Worker (e.g. a local file server).
+    const _PROXY_FRONTS = [
+        u => '/api/proxy?url=' + encodeURIComponent(u),
+        u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u),
+        u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+    ];
+    async function _proxyText(url, { timeout = 12000, validate = null } = {}) {
+        const attempt = async (front) => {
+            const r = await fetch(front(url), { signal: AbortSignal.timeout(timeout) });
+            if (!r.ok) throw new Error('proxy ' + r.status);
+            const t = await r.text();
+            if (validate && !validate(t)) throw new Error('invalid body');
+            return t;
+        };
+        return Promise.any(_PROXY_FRONTS.map(attempt));
     }
 
     // "Is Rainier out?" — the question every local asks. Judged from the summit-point model:
@@ -2012,7 +2072,7 @@
         const hourly = data.hourly;
 
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = _pacNow().date;
 
         // Derived values
         const snowDepthIn = (cur.snow_depth || 0) * 39.3701;   // m → inches
@@ -2041,11 +2101,11 @@
         }
 
         // Hourly cards — start from current hour
-        const startIdx = hourly.time.findIndex(t => new Date(t) >= now);
+        const _nowKey = _pacNow().date + 'T' + String(_pacNow().hour).padStart(2, '0');
+        const startIdx = hourly.time.findIndex(t => t.slice(0, 13) >= _nowKey);   // Open-Meteo times are Pacific wall-clock strings
         let hourlyHtml = '';
         for (let i = Math.max(0, startIdx); i < Math.min(startIdx + 24, hourly.time.length); i++) {
-            const d = new Date(hourly.time[i]);
-            const h = d.getHours();
+            const h = +hourly.time[i].slice(11, 13);
             const isNow = i === startIdx;
             const label = isNow ? 'NOW' : (h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h-12}pm`);
             const w = wmo(hourly.weather_code[i]);
@@ -2709,18 +2769,21 @@
     // Music keywords used to filter non-MRV-chamber feeds
     const _MUSIC_RE = /music|band|concert|dj|jam|folk|jazz|blues|rock|acoustic|performance|singer|trio|duo|quartet|live\s*music|open\s*mic|tunes|session|apres|apres-ski|pub\s*night/i;
 
+    let _liveEventsCachedAt = null;   // ms timestamp when the ICS came from localStorage instead of the network
     async function _fetchFeed(url, opts = {}) {
-        // Race two CORS proxies (codetabs hangs ~20s when it's down); first valid ICS wins.
-        const PROXIES = ['https://api.codetabs.com/v1/proxy/?quest=', 'https://api.allorigins.win/raw?url='];
-        const viaProxy = async (px) => {
-            const res = await fetch(px + encodeURIComponent(url), { signal: AbortSignal.timeout(12000) });
-            if (!res.ok) throw new Error('proxy ' + res.status);
-            const t = await res.text();
-            if (!/BEGIN:VCALENDAR/.test(t)) throw new Error('not ics');
-            return t;
-        };
+        // Our Worker proxy first, public proxies as fallback; the last good ICS is kept in localStorage
+        // for a week so a proxy outage degrades to "cached" instead of an empty calendar.
+        const ckey = 'ecm_ics_' + url.replace(/\W+/g, '_').slice(0, 80);
         try {
-            const text = await Promise.any(PROXIES.map(viaProxy)).catch(() => null);
+            let text = await _proxyText(url, { validate: t => /BEGIN:VCALENDAR/.test(t) }).catch(() => null);
+            if (text) {
+                try { localStorage.setItem(ckey, JSON.stringify({ t: Date.now(), text })); } catch (e) {}
+            } else {
+                try {
+                    const c = JSON.parse(localStorage.getItem(ckey) || 'null');
+                    if (c && Date.now() - c.t < 7 * 86400000) { text = c.text; _liveEventsCachedAt = c.t; }
+                } catch (e) {}
+            }
             if (!text) return [];
             let events = _parseIcal(text);
             if (opts.musicOnly) events = events.filter(e => _MUSIC_RE.test(e.name + ' ' + e.desc + ' ' + (e.venue||'')));
@@ -2813,12 +2876,13 @@
             </button>`).join('');
 
         // Merge hardcoded + live events, filter to today → 3 weeks out
-        const todayStr = new Date().toISOString().split('T')[0];
-        const cutoff = new Date(); cutoff.setDate(cutoff.getDate() + 21);
-        const cutoffStr = cutoff.toISOString().split('T')[0];
-        const allEvents = [...STATIC_EVENTS.filter(s => !_liveEvents.some(l => l.date === s.date && l.name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,20) === s.name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,20))), ..._liveEvents]
-            .filter(e => e.date >= todayStr && e.date <= cutoffStr)
+        const todayStr = _pacNow().date;
+        const cutoffStr = _pacAddDays(21);
+        const mergedEvents = [...STATIC_EVENTS.filter(s => !_liveEvents.some(l => l.date === s.date && l.name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,20) === s.name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,20))), ..._liveEvents]
+            
             .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+        const allEvents = mergedEvents.filter(e => e.date >= todayStr && e.date <= cutoffStr);
+        const laterEvents = mergedEvents.filter(e => e.date > cutoffStr);
         const filtered = activeEvtFilter === 'all' ? allEvents : allEvents.filter(e => e.cat === activeEvtFilter);
         const byDate = {};
         for (const e of filtered) {
@@ -2832,7 +2896,7 @@
         let daysHtml = '';
         for (const [dateStr, evts] of Object.entries(byDate)) {
             const d = new Date(dateStr + 'T12:00:00');
-            const isToday = dateStr === new Date().toISOString().split('T')[0];
+            const isToday = dateStr === _pacNow().date;
             const label = isToday
                 ? `Today — ${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`
                 : `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
@@ -2873,13 +2937,30 @@
         const liveNote = _liveEvents.length
             ? `<span style="font-size:0.6rem;color:#4ade80;font-weight:600;margin-left:0.75rem">● Live updated</span>`
             : _liveEventsDone
-            ? `<span style="font-size:0.6rem;color:#567a96;margin-left:0.75rem">Resort calendar · Enumclaw feed unavailable</span>`
+            ? `<span style="font-size:0.6rem;color:#567a96;margin-left:0.75rem">Resort calendar · ${_liveEventsCachedAt ? 'Enumclaw feed from cache (' + new Date(_liveEventsCachedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ')' : 'Enumclaw feed unavailable'}</span>`
             : `<span style="font-size:0.6rem;color:#567a96;margin-left:0.75rem;display:inline-flex;align-items:center;gap:0.4rem">fetching events… <span class="loading-spinner" style="width:10px;height:10px;border-width:1.5px"></span></span>`;
 
         container.innerHTML = `
             <div class="section-header">📅 Upcoming Events — Next 3 Weeks ${liveNote}</div>
             <div class="events-filter">${filterHtml}</div>
-            <div class="events-list">${daysHtml}</div>`;
+            <div class="events-list">${daysHtml || '<div style="padding:0.5rem 1rem 1rem;font-size:0.8rem;color:#567a96">Nothing on the calendar in the next three weeks for this filter.</div>'}</div>
+            ${(() => {
+                const later = (activeEvtFilter === 'all' ? laterEvents : laterEvents.filter(e => e.cat === activeEvtFilter)).slice(0, 40);
+                if (!later.length) return '';
+                const byMonth = {};
+                for (const e of later) { const k = e.date.slice(0, 7); (byMonth[k] = byMonth[k] || []).push(e); }
+                const MONTHS_L = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                return `<div class="section-header" style="margin-top:1.25rem">🗓 Later This Season</div>
+                <div style="padding:0 1rem 1rem">${Object.entries(byMonth).map(([k, evs]) => `
+                    <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#90cdf4;margin:0.7rem 0 0.3rem">${MONTHS_L[+k.slice(5, 7) - 1]} ${k.slice(0, 4)}</div>
+                    ${evs.map(e => { const d = new Date(e.date + 'T12:00:00'); return `
+                    <div style="display:flex;gap:0.6rem;align-items:baseline;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.78rem">
+                        <span style="color:#567a96;min-width:4.2em;font-variant-numeric:tabular-nums">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]} ${d.getMonth() + 1}/${d.getDate()}</span>
+                        <span style="color:white;font-weight:600;flex:1;min-width:0">${e.name}${e.venue ? ` <span style="color:#567a96;font-weight:400">· ${e.venue}</span>` : ''}</span>
+                        ${e.cat && CAT_LABELS[e.cat] ? `<span style="font-size:0.6rem;color:#7ec8e3;white-space:nowrap">${CAT_LABELS[e.cat]}</span>` : ''}
+                    </div>`; }).join('')}`).join('')}
+                </div>`;
+            })()}`;
     }
 
     function filterEvents(cat) {
@@ -2908,16 +2989,16 @@
           link: CRYSTAL_CAMS_URL,
           img: 'https://webcams.opensnow.com/current/3416.jpg' },
         { name: 'Northway Lift Cam',                  elev: "6,776'", tag: 'Upper Mtn',  tagCls: 'tag-upper',
-          link: CRYSTAL_CAMS_URL,
+          link: CRYSTAL_CAMS_URL, ref: true,
           img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Looking_up_the_Northway_lift_on_Crystal_Mountain_%287_March_2025%29.jpg/1280px-Looking_up_the_Northway_lift_on_Crystal_Mountain_%287_March_2025%29.jpg' },
         { name: 'Mid-Mountain Snow Stake',            elev: "5,400'", tag: 'Snow Stake', tagCls: 'tag-upper',
           link: CRYSTAL_CAMS_URL,
           img: 'https://webcams.opensnow.com/current/2003.jpg' },
         { name: 'Midway Cam — Top of Chinook Express', elev: "5,200'", tag: 'Lift Cam',   tagCls: 'tag-lift',
-          link: CRYSTAL_CAMS_URL,
-          img: 'https://webcams.opensnow.com/current/722.jpg' },
+          link: CRYSTAL_CAMS_URL, ref: true,   // OpenSnow's mirror of this cam has shown a "not happy" placeholder for months
+          img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Campbell_Basin_ski_run_at_Crystal_Mountain_%287_March_2025%29.jpg/1280px-Campbell_Basin_ski_run_at_Crystal_Mountain_%287_March_2025%29.jpg' },
         { name: 'Gold Hills (Looking West)',          elev: "5,044'", tag: 'Lift Cam',   tagCls: 'tag-lift',
-          link: CRYSTAL_CAMS_URL,
+          link: CRYSTAL_CAMS_URL, ref: true,
           img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Doppelmayr_Detachable_Chairlift_Crystal_Mountain%2C_Washington.jpg/1280px-Doppelmayr_Detachable_Chairlift_Crystal_Mountain%2C_Washington.jpg' },
     ];
 
@@ -2938,11 +3019,28 @@
             const s = latest.structure;
             const url = (s.centerprev || s.thumbnail || s.oneeighth || {}).url_full;
             if (!url) return;
-            const el = document.getElementById('cam-roundshot-img');
-            if (el) { el.src = url; el.alt = 'Crystal Mountain summit 360 cam — live'; }
             const ts = document.getElementById('cam-roundshot-ts');
-            if (ts && latest.datetime) ts.textContent = '● Live · ' + _roundshotTime(latest.datetime);
-        } catch (e) { /* keep placeholder */ }
+            const when = latest.datetime ? _roundshotTime(latest.datetime) : '';
+            const ageH = latest.datetime ? _roundshotAgeSec(latest.datetime) / 3600 : 99;
+            // Preload and reject dark frames (the cam shoots ~7 AM to ~6 PM; the last frame of the day is dusk).
+            const img = new Image(); img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                let luma = 255;
+                try {
+                    const c = document.createElement('canvas'); c.width = 32; c.height = 24;
+                    const g = c.getContext('2d'); g.drawImage(img, 0, 0, 32, 24);
+                    const d = g.getImageData(0, 0, 32, 24).data; let sum = 0;
+                    for (let i = 0; i < d.length; i += 4) sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+                    luma = sum / (d.length / 4);
+                } catch (e) {}
+                if (luma < 45) { if (ts) { ts.textContent = `◌ Cam asleep · last frame ${when}`; ts.className = 'webcam-ref asleep'; } return; }
+                const el = document.getElementById('cam-roundshot-img');
+                if (el) { el.src = url; el.alt = 'Crystal Mountain summit 360 cam'; }
+                if (ts) { ts.textContent = (ageH <= 3 ? '● Live · ' : '● Last frame · ') + when; ts.className = 'webcam-ref live'; }
+            };
+            img.onerror = () => { if (ts) { ts.textContent = 'Reference photo · cam offline'; ts.className = 'webcam-ref'; } };
+            img.src = url;
+        } catch (e) { const ts = document.getElementById('cam-roundshot-ts'); if (ts) { ts.textContent = 'Reference photo · cam offline'; ts.className = 'webcam-ref'; } }
     }
 
     function renderWebcams() {
@@ -2961,7 +3059,7 @@
                     <div class="webcam-meta">
                         <span class="webcam-elev">📍 ${c.elev}</span>
                         <span class="webcam-tag ${c.tagCls}">${c.tag}</span>
-                        ${c.roundshot ? '<span id="cam-roundshot-ts" style="font-size:0.6rem;color:#4ade80;font-weight:600"></span>' : ''}
+                        ${c.roundshot ? '<span id="cam-roundshot-ts" class="webcam-ref">checking…</span>' : c.ref ? '<span class="webcam-ref">Reference photo · not live</span>' : '<span class="webcam-ref live">● Live still</span>'}
                     </div>
                 </div>
             </div>`).join('');
@@ -2970,8 +3068,9 @@
             <div class="section-header">🎥 Mountain Webcams — Crystal Mountain WA</div>
             <div style="padding:0 0.25rem 0.75rem;font-size:0.78rem;color:#90cdf4;line-height:1.5">
                 Seven resort cams from the base to the Summit House at the top of the Mt. Rainier Gondola (6,872 ft).
-                The summit 360° thumbnail and the Chair 6 / snow-stake stills refresh on load; the rest are reference
-                photos — tap any card for the live stream on the official page. The snow stake is cleared daily before 4 PM.
+                Cards tagged <span style="color:#4ade80">● Live still</span> refresh on load; cards tagged <span style="color:#94a3b8">Reference photo</span>
+                are last-season photos because the public mirror of that cam is down — tap any card for the live stream on the official page.
+                The snow stake is cleared daily before 4 PM.
             </div>
             <div class="webcam-grid">${html}</div>
             <div style="padding:0.75rem 0.25rem 0;text-align:center">
@@ -3106,7 +3205,7 @@
         const el = document.getElementById('lodging-content');
         if (!el) return;
 
-        const now = new Date();
+        const now = _pacDate();
         const updatedStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
         const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
         const dateStr = `${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
@@ -3135,12 +3234,12 @@
             ).join('');
 
             return `<div class="card" style="margin-bottom:1rem">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
+                <div class="lodge-head">
                     <div>
                         <div style="font-size:1rem;font-weight:700;color:white;margin-bottom:0.1rem">${p.emoji} ${p.name}</div>
                         <div style="font-size:0.72rem;color:#567a96">${p.type} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.location + ' Washington')}" target="_blank" rel="noopener" style="color:#7ec8e3;text-decoration:none">${p.location}</a> · ${p.distance}</div>
                     </div>
-                    <div style="text-align:right;flex:0 1 45%;max-width:45%;margin-left:1rem;min-width:0">
+                    <div class="lodge-price">
                         <div style="font-size:1rem;font-weight:700;color:#38bdf8">${p.price}</div>
                         <div style="font-size:0.65rem;color:#567a96;overflow-wrap:anywhere">${p.priceNote}</div>
                     </div>
@@ -3456,22 +3555,25 @@
     // Parse a simple display string like "11am–9pm" for open-now check (fallback hours)
     function _parseDisplayHours(str) {
         if (!str) return null;
-        const m = str.match(/(\d+)(?::(\d+))?(am|pm)?[-–](\d+)(?::(\d+))?(am|pm)?/i);
+        // Tolerate "8 AM – midnight", "11am-10pm", "Noon–8 PM", "9:30 am - 2 am" (overnight).
+        const norm = str.replace(/midnight/ig, '12am').replace(/noon/ig, '12pm').replace(/\s*([ap])\.?m\.?/ig, '$1m');
+        const m = norm.match(/(\d+)(?::(\d+))?\s*(am|pm)?\s*[-–—]\s*(\d+)(?::(\d+))?\s*(am|pm)?/i);
         if (!m) return { display: str, startMin: -1, endMin: -1 };
         let sh = +m[1], sm = +(m[2]||0), sp = (m[3]||'').toLowerCase();
         let eh = +m[4], em = +(m[5]||0), ep = (m[6]||'').toLowerCase();
+        if (!sp && !ep && sh <= 12 && eh <= 12) { sp = sh >= 7 && sh <= 11 ? 'am' : 'pm'; ep = 'pm'; }   // "11-10" style
+        if (!sp && ep) sp = (sh >= 7 && sh <= 11) ? 'am' : ep;                                            // "8 – 10pm"
         if (sp === 'pm' && sh !== 12) sh += 12; if (sp === 'am' && sh === 12) sh = 0;
         if (ep === 'pm' && eh !== 12) eh += 12; if (ep === 'am' && eh === 12) eh = 0;
-        return { display: str, startMin: sh*60+sm, endMin: eh*60+em };
+        let startMin = sh*60+sm, endMin = eh*60+em;
+        if (endMin <= startMin) endMin += 24*60;   // closes after midnight
+        return { display: str, startMin, endMin };
     }
 
     // ── Generic tap list scraper ──────────────────────────────────────────
     async function _scrapeTapList(url, parser) {
-        const PROXY = 'https://api.codetabs.com/v1/proxy/?quest=';
         try {
-            const res = await fetch(PROXY + encodeURIComponent(url));
-            if (!res.ok) return null;
-            const html = await res.text();
+            const html = await _proxyText(url);
             return _parseTapListHtml(html, parser);
         } catch { return null; }
     }
@@ -3658,9 +3760,9 @@
         const container = document.getElementById('breweries-content');
         container.innerHTML = `<div style="padding:1.5rem 1rem;color:#567a96;font-size:0.85rem;display:flex;align-items:center;gap:0.6rem">Loading hours… <span class="loading-spinner"></span></div>`;
 
-        const dow      = new Date().getDay();
-        const todayStr = new Date().toISOString().split('T')[0];
-        const nowMins  = new Date().getHours() * 60 + new Date().getMinutes();
+        const dow      = _pacDate().getDay();
+        const todayStr = _pacNow().date;
+        const nowMins  = _pacMins();
 
         // Build a tap list fetch promise for every brewery
         const tapListPromises = BREWERIES.map(b => {
@@ -4088,10 +4190,10 @@
     ];
 
     function renderFood() {
-        const now      = new Date();
+        const now      = _pacDate();
         const dow      = now.getDay(); // 0=Sun … 6=Sat
         const nowMins  = now.getHours() * 60 + now.getMinutes();
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = _pacNow().date;
         const DAY_NAMES  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
         const DAY_SHORT  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
         const today = DAY_NAMES[dow];
@@ -4229,6 +4331,9 @@
                     hoursLine   = `<div class="food-hours">🕐 ${todayHours}</div>`;
                 }
 
+                if (_seasonState() === 'preseason' && /Crystal Mountain Hotels/.test(v.area)) {
+                    hoursLine += `<div class="food-hours-closed" style="color:#fbbf24">⚠ 2026–27 hours unverified · hotel is mid-renovation · call ahead</div>`;
+                }
                 return `
                 <div class="food-card${isOpen && !preseasonVenue ? '' : ' closed-today'}">
                     <div class="food-card-header">
@@ -4727,8 +4832,8 @@
 
     function renderMaple() {
         const container = document.getElementById('maple-content');
-        const dow     = new Date().getDay();
-        const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+        const dow     = _pacDate().getDay();
+        const nowMins = _pacMins();
 
         const gradeColor = g => {
             if (/wine/i.test(g))           return '#c084fc';
@@ -4777,7 +4882,7 @@
             }).join('');
 
             return `
-            <div class="brewery-card">
+            <div class="brewery-card data-town="${_breweryTown(p)}" data-open="${/● Open Now/.test(statusHtml) ? 1 : 0}"">
                 <div class="brewery-header">
                     <div class="brewery-name">${p.name}</div>
                     <div class="brewery-dist">${p.drive}</div>
@@ -4796,6 +4901,8 @@
 
         container.innerHTML = `
             <div class="section-header">🍒 Local PNW Goods — Edible Souvenirs From Pacific Northwest Washington</div>
+            ${_cardFilterBar('maple-content', [...new Set(MAPLE_PLACES.map(_breweryTown))])}
+            <div class="card-filter-empty" style="display:none;padding:0.5rem 1rem 1rem;font-size:0.8rem;color:#567a96">Nothing open right now in that filter.</div>
             <div style="padding:0 1rem 0.5rem; font-size:0.75rem; color:#567a96">
                 Ordered closest first · Greenwater, Enumclaw, Buckley, then Pike Place for the day you fly out · Drive times are estimates without traffic
             </div>
@@ -4813,7 +4920,7 @@
     }
 
     function renderCannabis() {
-        const now    = new Date();
+        const now    = _pacDate();
         const dow    = now.getDay();
         const nowMins = now.getHours() * 60 + now.getMinutes();
         const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -4886,13 +4993,11 @@
     const PASS_INFO = [
         { label: 'Chinook Pass (SR-410, 5,432 ft)', route: 'SR-410',
           note: 'Highest pass on SR-410 · CLOSED for winter (typically mid-Nov to late May) · SR-410 dead-ends just past the Crystal turnoff.',
-          season: 'Closed for winter',
-          seasonCls: 'road-icy',
+          seasonal: true,
           url: 'https://wsdot.com/travel/real-time/mountainpasses/chinook' },
         { label: 'Cayuse Pass (SR-410/123 jct, 4,694 ft)', route: 'SR-410',
           note: 'Mt. Rainier NP east side · CLOSED for winter with Chinook · Sunrise Rd &amp; SR-123 also closed; use the Nisqually (Ashford) entrance for Paradise.',
-          season: 'Closed for winter',
-          seasonCls: 'road-icy',
+          seasonal: true,
           url: 'https://wsdot.com/travel/real-time/mountainpasses/chinook' },
         { label: 'SR-410 · Crystal to Greenwater', route: 'SR-410',
           note: 'Year-round, plowed route from Enumclaw to Crystal Mtn Blvd · traction advisories common above Greenwater · carry chains.',
@@ -4901,6 +5006,16 @@
           url: 'https://wsdot.com/travel/real-time/mountainpasses/crystal-to-greenwater' },
     ];
 
+    // Chinook/Cayuse have no keyless live feed (WSDOT's API needs a registered access code), so the
+    // status is the published seasonal pattern by calendar month, labeled as such.
+    function _passSeasonal() {
+        const m = _pacDate().getMonth() + 1;
+        if (m >= 12 || m <= 4) return { season: 'Closed for winter · seasonal schedule', seasonCls: 'road-icy' };
+        if (m === 11)          return { season: 'Closes for winter in Nov · check WSDOT for the date', seasonCls: 'road-wet' };
+        if (m === 5)           return { season: 'Reopens late May · check WSDOT', seasonCls: 'road-wet' };
+        if (m === 10)          return { season: 'Open until the first big snow · usually closes mid-Nov', seasonCls: 'road-wet' };
+        return { season: 'Open for summer', seasonCls: 'road-dry' };
+    }
     function _compassDir(deg) {
         if (deg == null) return '';
         const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
@@ -4913,19 +5028,19 @@
 
         const updatedStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-        const rwisCards = PASS_INFO.map(p => `
+        const rwisCards = PASS_INFO.map(p0 => { const p = p0.seasonal ? { ...p0, ..._passSeasonal() } : p0; return `
             <div class="road-card">
                 <div class="road-card-header">
                     <div class="road-name">${p.label}</div>
                     <div class="road-route-tag">${p.route}</div>
                 </div>
                 <div class="road-note">${p.note}</div>
-                <div class="road-status ${p.seasonCls}">✅ ${p.season}</div>
+                <div class="road-status ${p.seasonCls}">${p.seasonal ? '📅' : '✅'} ${p.season}</div>
                 <a href="${p.url}" target="_blank" rel="noopener"
                    style="display:inline-block;margin-top:0.4rem;font-size:0.72rem;color:#38bdf8;text-decoration:none">
                     WSDOT live cams &amp; pass report ↗
                 </a>
-            </div>`).join('');
+            </div>`; }).join('');
 
         // Local surface street cards derived from Open-Meteo weather
         // Valley floor (Greenwater / Enumclaw) runs 8–14°F warmer than the Crystal Mountain base (4,400 ft)
@@ -5046,7 +5161,7 @@
         const container = document.getElementById('btv-parking');
         if (!container) return;
 
-        const now   = new Date();
+        const now   = _pacDate();
         const dow   = now.getDay();   // 0=Sun … 6=Sat
         const hour  = now.getHours();
         const mins  = now.getMinutes();
@@ -5306,7 +5421,7 @@
         const container = document.getElementById('markets-content');
         container.innerHTML = `<div style="padding:1.5rem 1rem;color:#567a96;font-size:0.85rem;display:flex;align-items:center;gap:0.6rem">Loading… <span class="loading-spinner"></span></div>`;
 
-        const now     = new Date();
+        const now     = _pacDate();
         const dow     = now.getDay();
         const nowMins = now.getHours() * 60 + now.getMinutes();
         const updatedStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -5388,7 +5503,7 @@
         }).join('');
 
         container.innerHTML = `
-            <div class="section-header">🥕 Farmers Markets — Crystal Mountain Corridor &amp; the Sound <span style="font-size:0.6rem;color:#4ade80;font-weight:600;margin-left:0.75rem">● Live updated</span></div>
+            <div class="section-header">🥕 Farmers Markets — Crystal Mountain Corridor &amp; the Sound <span style="font-size:0.6rem;color:#567a96;font-weight:600;margin-left:0.75rem">Dates verified Oct 2026</span></div>
             <div style="padding:0 1rem 0.5rem;font-size:0.8rem;color:#7ec8e3">
                 Showing status for <strong style="color:#e0eef8">${todayFull}</strong> · Last checked ${updatedStr}.
                 Markets are seasonal — dates and hours verified against ${now.getFullYear()} schedules.
@@ -5725,11 +5840,30 @@
         },
     ];
 
+    // Town / open-now filter chips for the long card pages (dining, PNW goods). Pure show/hide, no re-render.
+    const _cardFilterState = {};
+    function _cardFilterBar(containerId, towns) {
+        const st = _cardFilterState[containerId] || 'all';
+        const btn = (val, label) => `<button class="evt-filter-btn ${st === val ? 'active' : ''}" onclick="cardFilter('${containerId}','${val}')">${label}</button>`;
+        return `<div class="card-filter" id="${containerId}-filter">${btn('all', '✦ All')}${towns.map(t => btn(t, '📍 ' + t)).join('')}${btn('open', '● Open now')}</div>`;
+    }
+    function cardFilter(containerId, val) {
+        _cardFilterState[containerId] = val;
+        const root = document.getElementById(containerId); if (!root) return;
+        root.querySelectorAll('.card-filter .evt-filter-btn').forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes(`'${val}')`)));
+        let shown = 0;
+        root.querySelectorAll('.brewery-card[data-town]').forEach(c => {
+            const ok = val === 'all' || (val === 'open' ? c.dataset.open === '1' : c.dataset.town === val);
+            c.style.display = ok ? '' : 'none'; if (ok) shown++;
+        });
+        const empty = root.querySelector('.card-filter-empty');
+        if (empty) empty.style.display = shown ? 'none' : '';
+    }
     async function renderMRVEats() {
         const container = document.getElementById('mrveats-content');
         container.innerHTML = `<div style="padding:1.5rem 1rem;color:#567a96;font-size:0.85rem;display:flex;align-items:center;gap:0.6rem">Loading… <span class="loading-spinner"></span></div>`;
 
-        const now     = new Date();
+        const now     = _pacDate();
         const dow     = now.getDay();
         const nowMins = now.getHours() * 60 + now.getMinutes();
         const updatedStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -5773,7 +5907,7 @@
                 : '';
 
             return `
-            <div class="brewery-card${!todayHours ? ' closed-today' : ''}">
+            <div class="brewery-card${!todayHours ? ' closed-today' : ''}" data-town="${_breweryTown(r)}" data-open="${isOpenNow === true ? 1 : 0}">
                 <div class="brewery-header">
                     <div class="brewery-name">${r.emoji} ${r.name}</div>
                     <div class="brewery-dist">${r.drive}</div>
@@ -5794,6 +5928,8 @@
 
         container.innerHTML = `
             <div class="section-header">🍴 Eat in Greenwater &amp; Enumclaw <span style="font-size:0.6rem;color:#4ade80;font-weight:600;margin-left:0.75rem">● Live updated</span></div>
+            ${_cardFilterBar('mrveats-content', [...new Set(sorted.map(_breweryTown))])}
+            <div class="card-filter-empty" style="display:none;padding:0.5rem 1rem 1rem;font-size:0.8rem;color:#567a96">Nothing open right now in that filter — try another town.</div>
             <div style="padding:0 1rem 0.5rem;font-size:0.8rem;color:#7ec8e3">
                 Showing hours &amp; specials for <strong style="color:#e0eef8">${todayFull}</strong> · Last checked ${updatedStr}.
                 Hours may vary on holidays — always confirm before visiting.
@@ -5976,7 +6112,7 @@
     ];
 
     function renderEateries() {
-        const now      = new Date();
+        const now      = _pacDate();
         const dow      = now.getDay();
         const nowMins  = now.getHours() * 60 + now.getMinutes();
         const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -6013,9 +6149,8 @@
 
             return `
             <div class="brewery-card" style="position:relative">
-                <div style="position:absolute; top:0.9rem; right:1rem; font-size:0.6rem; color:#567a96; font-weight:600; letter-spacing:1px">#${r.rank}</div>
                 <div class="brewery-header">
-                    <div class="brewery-name">${r.name}</div>
+                    <div class="brewery-name"><span class="rank-badge">#${r.rank}</span>${r.name}</div>
                     <div class="brewery-dist">${r.drive}</div>
                 </div>
                 <div class="brewery-town">📍 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ' ' + r.town)}" target="_blank" rel="noopener" style="color:#a0c4d8;text-decoration:none">${r.town}</a></div>
@@ -6110,6 +6245,7 @@
             </div>`).join('')}
             <button class="carousel-btn prev" onclick="carouselStep(-1)">&#8249;</button>
             <button class="carousel-btn next" onclick="carouselStep(1)">&#8250;</button>
+            <div class="carousel-wordmark"><span>Everything Crystal Mountain</span><small>Winter 2026–27 · Greenwater · Enumclaw</small></div>
             <div class="carousel-dots">${dotsHtml}</div>
         </div>`;
 
@@ -6467,6 +6603,10 @@
           desc: "The legendary blackberry pie stop on the SW side. Diner-style breakfast/lunch, full dinner. A pre/post-park ritual for Nisqually visitors." },
     ];
 
+    function _summerFold(title, sub, inner) {
+        if (!_isParkWinterNow()) return inner;
+        return `<details class="summer-fold"><summary>☀️ ${title} <span class="sf-arrow">▾</span><span class="sf-sub">${sub}</span></summary><div class="sf-body">${inner}</div></details>`;
+    }
     function renderRainier() {
         const el = document.getElementById('rainier-content');
         if (!el) return;
@@ -6508,12 +6648,12 @@
 
         const lodgingHtml = RAINIER_LODGING.map(p => `
             <div class="card" style="margin-bottom:1rem">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
+                <div class="lodge-head">
                     <div>
                         <div style="font-size:1rem;font-weight:700;color:white;margin-bottom:0.1rem">🏠 ${p.name}</div>
                         <div style="font-size:0.72rem;color:#567a96">${p.type} · ${p.location} · ${p.season}</div>
                     </div>
-                    <div style="text-align:right;flex:0 1 45%;max-width:45%;margin-left:1rem;min-width:0">
+                    <div class="lodge-price">
                         <div style="font-size:1rem;font-weight:700;color:#38bdf8">${p.price}</div>
                         <div style="font-size:0.65rem;color:#567a96;overflow-wrap:anywhere">${p.priceNote}</div>
                     </div>
@@ -6624,16 +6764,18 @@
                 </div>
 
                 <!-- Trails -->
+                ${_summerFold('Summer trails — most are snowed in until June', 'Sunrise Rd, Stevens Canyon Rd and Cayuse Pass are closed for the season, so these trailheads are unreachable. In winter, Paradise (via Nisqually) has ranger-led snowshoe walks and the sledding area. Tap to see the summer list.', `
                 <div class="section-header" style="margin-bottom:0.5rem">🥾 Top Trails by Region</div>
                 <div style="padding:0 0 0.75rem;font-size:0.72rem;color:#567a96;line-height:1.6">From easy interpretive loops to multi-thousand-foot climbs. Crystal Mountain hikers will use Sunrise &amp; NE trails most; the SR-410 / SR-123 / Stevens Canyon corridor opens a lot of options on a single day-trip.</div>
-                ${trailsHtml}
+                ${trailsHtml}`)}
 
                 <!-- Camping -->
+                ${_summerFold('Campgrounds — closed for the season', 'All front-country campgrounds close by early October and reopen late May to July. Tap to see them for planning.', `
                 <div class="section-header" style="margin-bottom:0.5rem">⛺ Campgrounds</div>
                 <div style="padding:0 0 0.75rem;font-size:0.72rem;color:#567a96;line-height:1.6">All park front-country campgrounds require advance reservation at recreation.gov during summer (book 6 months out). No hookups. RV length limits vary.</div>
                 <div class="brewery-grid" style="margin-bottom:1.5rem">
                     ${campingHtml}
-                </div>
+                </div>`)}
 
                 <!-- Lodging -->
                 <div class="section-header" style="margin-bottom:0.5rem">🛏️ Lodging — In-Park &amp; Nearby</div>
@@ -6822,10 +6964,11 @@
                 <div class="snow-stats" style="margin:0.75rem 0 1rem">
                     <div class="snow-stat"><div class="snow-val">${sr.TotalOpenLifts ?? '—'}<span style="font-size:0.8rem;color:#567a96">/${sr.TotalLifts ?? '—'}</span></div><div class="snow-lbl">Lifts open</div></div>
                     <div class="snow-stat"><div class="snow-val">${sr.TotalOpenTrails ?? '—'}<span style="font-size:0.8rem;color:#567a96">/${sr.TotalTrails ?? '—'}</span></div><div class="snow-lbl">Trails open</div></div>
+                    ${_seasonState(sb) === 'preseason' ? '' : `
                     <div class="snow-stat"><div class="snow-val">${(sr.SummitArea?.Last24HoursIn && sr.SummitArea.Last24HoursIn !== '--') ? sr.SummitArea.Last24HoursIn + '"' : '—'}</div><div class="snow-lbl">24hr summit</div></div>
-                    <div class="snow-stat"><div class="snow-val">${(sr.SnowBaseRangeIn && sr.SnowBaseRangeIn !== '--') ? sr.SnowBaseRangeIn + '"' : '—'}</div><div class="snow-lbl">Base depth</div></div>
+                    <div class="snow-stat"><div class="snow-val">${(sr.SnowBaseRangeIn && sr.SnowBaseRangeIn !== '--') ? sr.SnowBaseRangeIn + '"' : '—'}</div><div class="snow-lbl">Base depth</div></div>`}
                     ${_seasonState(sb) === 'preseason'
-                        ? `<div class="snow-stat"><div class="snow-val">${_seasonSnowToDate != null ? Math.round(_seasonSnowToDate) + '"' : '—'}</div><div class="snow-lbl">Snow since ${_fmtMD(SEASON_FIRST_SNOW)}</div></div>`
+                        ? `<div class="snow-stat" title="Measured from this fall's first snowfall (${_fmtMD(SEASON_FIRST_SNOW)}); the resort's base depth and 24/48-hr totals return on opening day"><div class="snow-val">${_seasonSnowToDate != null ? Math.round(_seasonSnowToDate) + '"' : '—'}</div><div class="snow-lbl">Snow this fall</div></div>`
                         : `<div class="snow-stat"><div class="snow-val">${(sr.SeasonTotalIn && sr.SeasonTotalIn !== '--') ? sr.SeasonTotalIn + '"' : '—'}</div><div class="snow-lbl">Season Total</div></div>`}
                 </div>`;
             container.innerHTML = `
@@ -6895,7 +7038,7 @@
 
         // Crowd forecast — only once the mountain is open
         if (_seasonState(sbData) === 'open') {
-            const now = new Date();
+            const now = _pacDate();
             const dow = now.getDay(); // 0=Sun,1=Mon,...,6=Sat
             const todayStr = now.toISOString().slice(0, 10);
 
@@ -6925,7 +7068,7 @@
         }
 
         // Today's events + next few upcoming events
-        const today = new Date().toISOString().slice(0, 10);
+        const today = _pacNow().date;
         const todayEvts = _liveEvents
             .filter(e => e.date === today && ['resort','music','food','community'].includes(e.cat))
             .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
@@ -6955,7 +7098,7 @@
         }
 
         // Venue hours from FOOD_VENUES for today
-        const _dow = new Date().getDay();
+        const _dow = _pacDate().getDay();
         const _venueH = name => (FOOD_VENUES.find(v => v.name === name) || {}).hours?.[_dow];
 
         if (_seasonState(sbData) === 'open') {
