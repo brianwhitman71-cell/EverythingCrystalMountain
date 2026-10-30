@@ -54,10 +54,36 @@ async function proxy(request, url) {
   return withCors(res);
 }
 
+// WSDOT Traveler Information API — mountain pass conditions for the SR-410 corridor.
+// Needs the WSDOT_ACCESS_CODE secret (free, registered to Brian's email on 2026-10-30).
+const WSDOT_PASS_IDS = { 3: 'chinook', 2: 'cayuse', 5: 'crystal-greenwater' };
+async function wsdotPasses(env) {
+  if (!env.WSDOT_ACCESS_CODE) return json({ error: 'WSDOT_ACCESS_CODE secret not set' }, 503);
+  const api = `https://wsdot.wa.gov/traffic/api/MountainPassConditions/MountainPassConditionsREST.svc/GetMountainPassConditionsAsJson?AccessCode=${encodeURIComponent(env.WSDOT_ACCESS_CODE)}`;
+  let upstream;
+  try {
+    upstream = await fetch(api, { headers: { 'user-agent': UA, 'accept': 'application/json' }, cf: { cacheTtl: 300, cacheEverything: true }, signal: AbortSignal.timeout(15000) });
+  } catch (e) { return json({ error: 'wsdot fetch failed', detail: String(e && e.message || e) }, 502); }
+  if (!upstream.ok) return json({ error: 'wsdot ' + upstream.status }, 502);
+  let list;
+  try { list = JSON.parse((await upstream.text()).replace(/^\uFEFF/, '')); } catch { return json({ error: 'wsdot bad json' }, 502); }
+  const ms = s => { const m = /\/Date\((\d+)/.exec(s || ''); return m ? +m[1] : null; };
+  const passes = (list || []).filter(p => WSDOT_PASS_IDS[p.MountainPassId]).map(p => ({
+    id: p.MountainPassId, key: WSDOT_PASS_IDS[p.MountainPassId], name: p.MountainPassName,
+    updated: ms(p.DateUpdated), elevFt: p.ElevationInFeet,
+    road: p.RoadCondition || '', weather: p.WeatherCondition || '', tempF: p.TemperatureInFahrenheit,
+    advisory: !!p.TravelAdvisoryActive,
+    restrictions: [p.RestrictionOne, p.RestrictionTwo].filter(r => r && r.RestrictionText).map(r => ({ dir: r.TravelDirection, text: r.RestrictionText })),
+  }));
+  const res = new Response(JSON.stringify({ fetched: Date.now(), passes }), { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=300' } });
+  return withCors(res);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/api/proxy') return proxy(request, url);
+    if (url.pathname === '/api/wsdot/passes') return wsdotPasses(env);
     if (url.pathname.startsWith('/api/')) return json({ error: 'not found' }, 404);
     return env.ASSETS.fetch(request);
   },

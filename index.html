@@ -4991,23 +4991,48 @@
     // archived 2006 entries near Yakima). Instead of faking "Sensor offline" UI
     // we show static pass info that links to WSDOT's real-time per-pass page.
     const PASS_INFO = [
-        { label: 'Chinook Pass (SR-410, 5,432 ft)', route: 'SR-410',
-          note: 'Highest pass on SR-410 · CLOSED for winter (typically mid-Nov to late May) · SR-410 dead-ends just past the Crystal turnoff.',
+        { label: 'Chinook Pass (SR-410, 5,432 ft)', route: 'SR-410', wsdotId: 3,
+          note: 'Highest pass on SR-410 · closes for winter, typically mid-Nov to late May · SR-410 dead-ends just past the Crystal turnoff.',
           seasonal: true,
           url: 'https://wsdot.com/travel/real-time/mountainpasses/chinook' },
-        { label: 'Cayuse Pass (SR-410/123 jct, 4,694 ft)', route: 'SR-410',
-          note: 'Mt. Rainier NP east side · CLOSED for winter with Chinook · Sunrise Rd &amp; SR-123 also closed; use the Nisqually (Ashford) entrance for Paradise.',
+        { label: 'Cayuse Pass (SR-410/123 jct, 4,694 ft)', route: 'SR-410', wsdotId: 2,
+          note: 'Mt. Rainier NP east side · closes for winter with Chinook; Sunrise Rd &amp; SR-123 close too — use the Nisqually (Ashford) entrance for Paradise.',
           seasonal: true,
           url: 'https://wsdot.com/travel/real-time/mountainpasses/chinook' },
-        { label: 'SR-410 · Crystal to Greenwater', route: 'SR-410',
+        { label: 'SR-410 · Crystal to Greenwater', route: 'SR-410', wsdotId: 5,
           note: 'Year-round, plowed route from Enumclaw to Crystal Mtn Blvd · traction advisories common above Greenwater · carry chains.',
           season: 'Open · check traction advisories',
           seasonCls: 'road-dry',
           url: 'https://wsdot.com/travel/real-time/mountainpasses/crystal-to-greenwater' },
     ];
 
-    // Chinook/Cayuse have no keyless live feed (WSDOT's API needs a registered access code), so the
-    // status is the published seasonal pattern by calendar month, labeled as such.
+    // Live WSDOT pass conditions via the Worker (/api/wsdot/passes, 5-min edge cache). The seasonal
+    // label below is only the fallback when the Worker or WSDOT is unreachable.
+    let _wsdotPasses = null, _wsdotP = null;
+    function _fetchWsdotPasses() {
+        if (_wsdotP) return _wsdotP;
+        _wsdotP = fetch('/api/wsdot/passes', { signal: AbortSignal.timeout(9000) })
+            .then(r => r.ok ? r.json() : null)
+            .then(j => { _wsdotPasses = j && Array.isArray(j.passes) && j.passes.length ? j.passes : null; return _wsdotPasses; })
+            .catch(() => null);
+        return _wsdotP;
+    }
+    function _passLive(p) {
+        // → { text, cls, detail } from a WSDOT pass record
+        const rs = p.restrictions || [];
+        const txt = rs.map(r => r.text).join(' / ');
+        const same = rs.length === 2 && rs[0].text === rs[1].text;
+        const restr = same ? rs[0].text : rs.map(r => `${r.dir}: ${r.text}`).join(' · ');
+        const closed = /closed/i.test(p.road) || /closed/i.test(txt);
+        const chains = /chains? required|traction tires required|4wd|awd/i.test(txt);
+        const advised = /advised/i.test(txt);
+        const cls = closed ? 'road-icy' : chains ? 'road-icy' : advised ? 'road-wet' : 'road-dry';
+        const icon = closed ? '⛔' : chains ? '⛓' : advised ? '⚠️' : '✅';
+        const short = closed ? 'CLOSED' : chains ? restr.replace(/\.$/, '') : advised ? restr.replace(/\.$/, '') : 'Open · no restrictions';
+        const when = p.updated ? new Date(p.updated).toLocaleString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+        const detail = [p.road, p.weather, p.tempF != null ? `${p.tempF}°F` : ''].filter(Boolean).join(' · ');
+        return { text: `${icon} ${short}`, cls, detail, when, closed, chains, advised };
+    }
     function _passSeasonal() {
         const m = _pacDate().getMonth() + 1;
         if (m >= 12 || m <= 4) return { season: 'Closed for winter · seasonal schedule', seasonCls: 'road-icy' };
@@ -5029,18 +5054,33 @@
         const updatedStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
         const rwisCards = PASS_INFO.map(p0 => { const p = p0.seasonal ? { ...p0, ..._passSeasonal() } : p0; return `
-            <div class="road-card">
+            <div class="road-card" ${p.wsdotId ? `id="road-pass-${p.wsdotId}"` : ''}>
                 <div class="road-card-header">
                     <div class="road-name">${p.label}</div>
                     <div class="road-route-tag">${p.route}</div>
                 </div>
                 <div class="road-note">${p.note}</div>
-                <div class="road-status ${p.seasonCls}">${p.seasonal ? '📅' : '✅'} ${p.season}</div>
+                <div class="road-status ${p.seasonCls}" data-role="status">${p.seasonal ? '📅' : '✅'} ${p.season}</div>
+                <div class="road-live" data-role="live" style="font-size:0.7rem;color:#90cdf4;margin-top:0.35rem;line-height:1.5">${p.wsdotId ? 'Checking WSDOT…' : ''}</div>
                 <a href="${p.url}" target="_blank" rel="noopener"
                    style="display:inline-block;margin-top:0.4rem;font-size:0.72rem;color:#38bdf8;text-decoration:none">
                     WSDOT live cams &amp; pass report ↗
                 </a>
             </div>`; }).join('');
+        // Fill the pass cards with live WSDOT conditions once they arrive (cards render immediately).
+        _fetchWsdotPasses().then(list => {
+            for (const p0 of PASS_INFO) {
+                if (!p0.wsdotId) continue;
+                const card = document.getElementById(`road-pass-${p0.wsdotId}`); if (!card) continue;
+                const st = card.querySelector('[data-role=status]'), lv = card.querySelector('[data-role=live]');
+                const rec = (list || []).find(x => x.id === p0.wsdotId);
+                if (!rec) { if (lv) lv.textContent = 'WSDOT feed unavailable · seasonal status shown'; continue; }
+                const L = _passLive(rec);
+                if (st) { st.className = `road-status ${L.cls}`; st.textContent = L.text; }
+                if (lv) lv.innerHTML = `${L.detail ? L.detail + '<br>' : ''}<span style="color:#567a96">WSDOT · updated ${L.when}</span>`;
+            }
+            buildTicker(_sbLive);
+        });
 
         // Local surface street cards derived from Open-Meteo weather
         // Valley floor (Greenwater / Enumclaw) runs 8–14°F warmer than the Crystal Mountain base (4,400 ft)
@@ -7023,6 +7063,11 @@
                 if (season && season !== '--') items.push({ label: '📊 Season Total', val: `${season}"` });
             }
 
+            if (_wsdotPasses) {
+                const g = _wsdotPasses.find(x => x.id === 5), c = _wsdotPasses.find(x => x.id === 3);
+                if (g) { const L = _passLive(g); items.push({ label: '🛣 SR-410 to Crystal', val: L.text.replace(/^\S+\s/, '') + (g.road ? ' · ' + g.road.replace(/\.$/, '') : ''), cls: L.closed || L.chains ? 'ticker-hold' : '' }); }
+                if (c) { const L = _passLive(c); items.push({ label: '⛰ Chinook Pass', val: L.text.replace(/^\S+\s/, ''), cls: L.closed || L.chains ? 'ticker-hold' : '' }); }
+            } else { _fetchWsdotPasses().then(l => { if (l) buildTicker(_sbLive); }); }
             const _rs = _latestWeather && _rainierStatus(_latestWeather.current);
             if (_rs && _rs.cls) items.push({ label: '🏔 Rainier', val: _rs.ticker, cls: _rs.cls === 'out' ? 'ticker-open' : '' });
 
