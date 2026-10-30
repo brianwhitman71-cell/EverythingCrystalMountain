@@ -486,6 +486,39 @@
                 rgba(0,0,0,0.55) 100%);
             pointer-events: none;
         }
+        .carousel-live {
+            position: absolute; top: 10px; left: 12px; z-index: 3;
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            background: rgba(5,14,28,0.72); backdrop-filter: blur(6px);
+            border: 1px solid rgba(74,222,128,0.45); border-radius: 999px;
+            padding: 0.22rem 0.6rem; font-size: 0.62rem; font-weight: 700;
+            letter-spacing: 0.06em; text-transform: uppercase; color: #4ade80;
+        }
+        .carousel-live .dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; animation: livepulse 1.6s infinite; }
+        @keyframes livepulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }
+        .rainier-pill {
+            display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.55rem;
+            padding: 0.25rem 0.65rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #90cdf4;
+        }
+        .rainier-pill.out   { border-color: rgba(74,222,128,0.45); background: rgba(74,222,128,0.1);  color: #4ade80; }
+        .rainier-pill.maybe { border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.1);  color: #fbbf24; }
+        .rainier-pill.in    { border-color: rgba(148,163,184,0.3);  background: rgba(148,163,184,0.08); color: #94a3b8; }
+        .daily-grid .day-card.day-more { display: none; }
+        .daily-grid.expanded .day-card.day-more { display: block; }
+        .outlook-toggle {
+            display: block; margin: -0.9rem auto 1.5rem; padding: 0.4rem 1rem;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 999px;
+            color: #90cdf4; font-size: 0.7rem; font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+        .outlook-toggle:hover { background: rgba(255,255,255,0.09); color: white; }
+        .brewery-divider {
+            grid-column: 1 / -1; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+            margin-top: 0.35rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #90cdf4;
+        }
+        .brewery-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1); min-width: 2rem; }
+        .brewery-divider .bd-drive { font-weight: 500; letter-spacing: 0; text-transform: none; color: #567a96; }
+        .brewery-divider .bd-first { font-weight: 700; letter-spacing: 0; text-transform: none; color: #fbbf24; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 999px; padding: 0.1rem 0.5rem; font-size: 0.62rem; }
         .carousel-caption-text {
             display: none;
             max-width: 70%;
@@ -1626,7 +1659,7 @@
                     'temperature_2m','apparent_temperature','relative_humidity_2m',
                     'precipitation','rain','snowfall','snow_depth',
                     'wind_speed_10m','wind_direction_10m','wind_gusts_10m',
-                    'weather_code','is_day','visibility'
+                    'weather_code','is_day','visibility','cloud_cover'
                 ].join(','),
                 hourly: [
                     'temperature_2m','precipitation_probability',
@@ -1719,7 +1752,78 @@
                     ${overflowW > 0 ? `<div style="position:absolute;right:0;top:0;height:100%;width:${overflowW}%;background:${pctColor};opacity:0.5;border-radius:4px"></div>` : ''}
                 </div>
                 <div style="font-size:0.58rem;color:#3a5570;text-align:right">${source}</div>
+                <div id="season-chart"></div>
             </div>`;
+        _renderSeasonChart(seasonIn, normalIn);
+    }
+
+    // Season-to-date curve vs. a normal season. Shape of this season comes from Open-Meteo's archive
+    // (daily modeled summit snowfall since Nov 1, cached), scaled so the end of the line equals the
+    // resort's reported total. The normal curve spreads the average over an approximate month-by-month
+    // climatology for Crystal (Nov 11% · Dec 20% · Jan 19% · Feb 17% · Mar 18% · Apr 12% · May 3%).
+    const _SEASON_SHAPE = { 11: 0.11, 12: 0.20, 1: 0.19, 2: 0.17, 3: 0.18, 4: 0.12, 5: 0.03 };
+    let _seasonArchiveP = null;
+    function _seasonDates() {
+        const now = new Date(new Date().toLocaleDateString('en-CA', { timeZone: TZ }) + 'T12:00:00');
+        const y = now.getMonth() >= 10 ? now.getFullYear() : now.getFullYear() - 1;
+        return { start: `${y}-11-01`, end: `${y + 1}-05-31`, today: now.toLocaleDateString('en-CA') };
+    }
+    function _normalFrac(iso) {
+        // cumulative fraction of a normal season reached by date iso (Nov 1 = 0, May 31 = 1)
+        const d = new Date(iso + 'T12:00:00'); const m = d.getMonth() + 1;
+        const order = [11, 12, 1, 2, 3, 4, 5]; let f = 0;
+        for (const mm of order) {
+            if (mm === m) { const dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); return f + _SEASON_SHAPE[mm] * d.getDate() / dim; }
+            f += _SEASON_SHAPE[mm];
+        }
+        return m > 5 && m < 11 ? 1 : 0;
+    }
+    async function _renderSeasonChart(seasonIn, normalIn, start, end) {
+        const el = document.getElementById('season-chart');
+        if (!el || !(seasonIn > 0)) return;
+        const sd = _seasonDates(); start = start || sd.start; end = end || sd.today;
+        if (end < start) return;
+        try {
+            if (!_seasonArchiveP || _seasonArchiveP.key !== start + end) {
+                _seasonArchiveP = fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${LAT}&longitude=${LON}&elevation=2095&start_date=${start}&end_date=${end}&daily=snowfall_sum&timezone=${encodeURIComponent(TZ)}`).then(r => r.ok ? r.json() : null);
+                _seasonArchiveP.key = start + end;
+            }
+            const j = await _seasonArchiveP;
+            const t = j?.daily?.time || [], s = j?.daily?.snowfall_sum || [];
+            let cum = 0; const pts = [];
+            for (let i = 0; i < t.length; i++) { if (s[i] == null) continue; cum += s[i]; pts.push({ d: t[i], v: cum }); }
+            if (pts.length < 7 || cum <= 0) return;
+            const k = seasonIn / cum;                          // scale modeled shape to the resort's reported total
+            const W = 300, H = 84, px = 6, pt = 10, pb = 16;
+            const seasonEnd = sd.end;
+            const span = (new Date(seasonEnd) - new Date(start)) / 86400000;
+            const X = iso => px + (new Date(iso) - new Date(start)) / 86400000 / span * (W - 2 * px);
+            const yMax = Math.max(normalIn, seasonIn * 1.1, 1);
+            const Y = v => pt + (H - pt - pb) * (1 - v / yMax);
+            const thisLine = pts.map((p, i) => `${i ? 'L' : 'M'}${X(p.d).toFixed(1)},${Y(p.v * k).toFixed(1)}`).join(' ');
+            const nPts = []; for (let dd = new Date(start + 'T12:00:00'); dd <= new Date(seasonEnd + 'T12:00:00'); dd.setDate(dd.getDate() + 7)) { const iso = dd.toLocaleDateString('en-CA'); nPts.push(`${X(iso).toFixed(1)},${Y(normalIn * _normalFrac(iso)).toFixed(1)}`); }
+            const normLine = 'M' + nPts.join(' L');
+            const last = pts[pts.length - 1];
+            const months = []; for (let dd = new Date(start + 'T12:00:00'); dd <= new Date(seasonEnd + 'T12:00:00'); dd.setMonth(dd.getMonth() + 1)) months.push({ x: X(dd.toLocaleDateString('en-CA')), l: dd.toLocaleString('en-US', { month: 'short' }) });
+            const normNow = normalIn * _normalFrac(end);
+            el.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:0.7rem;margin-bottom:0.2rem">
+                    <span style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.06em;color:#567a96">Season so far vs. normal</span>
+                    <span style="font-size:0.62rem;color:#567a96">normal by now ≈ ${Math.round(normNow)}"</span>
+                </div>
+                <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="display:block;overflow:visible" role="img" aria-label="Season snowfall to date versus a normal season">
+                    <path d="${normLine}" fill="none" stroke="#567a96" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.8"/>
+                    <path d="${thisLine}" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linejoin="round"/>
+                    <circle cx="${X(last.d).toFixed(1)}" cy="${Y(seasonIn).toFixed(1)}" r="3" fill="#38bdf8"/>
+                    <text x="${Math.min(W - px, X(last.d) + 5).toFixed(1)}" y="${Math.max(9, Y(seasonIn) - 6).toFixed(1)}" fill="#e0f2fe" font-size="9" text-anchor="${X(last.d) > W * 0.8 ? 'end' : 'start'}">${Math.round(seasonIn)}"</text>
+                    ${months.map(m => `<text x="${m.x.toFixed(1)}" y="${H - 3}" fill="#3a5570" font-size="8">${m.l}</text>`).join('')}
+                    <text x="${W - px}" y="${(pt + 7)}" fill="#3a5570" font-size="8" text-anchor="end">${Math.round(yMax)}"</text>
+                </svg>
+                <div style="display:flex;gap:0.9rem;font-size:0.58rem;color:#567a96;margin-top:0.15rem">
+                    <span><span style="display:inline-block;width:14px;height:2px;background:#38bdf8;vertical-align:middle;margin-right:4px"></span>this season (resort total, shape from Open-Meteo)</span>
+                    <span><span style="display:inline-block;width:14px;border-top:2px dashed #567a96;vertical-align:middle;margin-right:4px"></span>normal ${Math.round(normalIn)}"</span>
+                </div>`;
+        } catch (e) { /* chart is a bonus */ }
     }
 
     let _seasonSnowToDate = null;   // inches at the summit since SEASON_FIRST_SNOW (pre-season only)
@@ -1841,6 +1945,67 @@
         }
     }
 
+    // "Is Rainier out?" — the question every local asks. Judged from the summit-point model:
+    // visibility (Open-Meteo caps at ~15 mi) and cloud cover. Thresholds are a judgment call, not science.
+    function _rainierStatus(cur) {
+        const visMi = cur.visibility != null ? cur.visibility / 1609 : null;
+        const cc = cur.cloud_cover;
+        const night = !cur.is_day;
+        const why = `Vis ${visMi != null ? visMi.toFixed(0) + ' mi' : '?'} · cloud cover ${cc != null ? cc + '%' : '?'} at the summit (model)`;
+        if (visMi == null || cc == null) return { cls: '', label: 'Rainier: no read', ticker: 'no read', why };
+        if (visMi >= 9 && cc <= 40) return { cls: 'out', label: night ? 'Rainier is out under the stars' : 'Rainier is out', ticker: night ? 'out under the stars' : 'OUT today', why };
+        if (visMi >= 5 && cc <= 75) return { cls: 'maybe', label: 'Rainier in and out', ticker: 'in and out of the clouds', why };
+        return { cls: 'in', label: 'Rainier socked in', ticker: 'socked in', why };
+    }
+
+    // Live summit cam as the hero on fresh-snow mornings. Roundshot's structure.json is CORS-open and
+    // its storage bucket sends access-control-allow-origin:*; "quarter" is the 3920×512 pano, "oneeighth" half that.
+    // Roundshot's "datetime" is the camera's LOCAL wall-clock time encoded as if it were UTC
+    // (the URL path 2026-10-29/18-10-00 matches the epoch read as UTC, and 18:10 is just after sunset).
+    // So: format it in UTC, and age it against Pacific wall-clock time encoded the same way.
+    const _roundshotTime = dt => new Date(dt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+    const _roundshotAgeSec = dt => new Date(new Date().toLocaleString('sv-SE', { timeZone: TZ }).replace(' ', 'T') + 'Z').getTime() / 1000 - dt;
+    let _liveHeroUrl = null;
+    async function _loadLiveHero(maxAgeHours = 3, minLuma = 45) {
+        if (activePhotos[0]?.live) return;
+        try {
+            const r = await fetch('https://crystalmountainresort.roundshot.com/summit/structure.json');
+            if (!r.ok) return;
+            const j = await r.json();
+            const imgs = (j.images || []).filter(i => i.status === 'finished' && i.structure);
+            if (!imgs.length) return;
+            const latest = imgs.reduce((a, b) => (b.datetime || 0) > (a.datetime || 0) ? b : a);
+            if (!latest.datetime || _roundshotAgeSec(latest.datetime) > maxAgeHours * 3600) return;   // stale cam → keep the photos
+            const s = latest.structure;
+            const url = ((window.innerWidth >= 700 ? s.quarter : s.oneeighth) || s.quarter || s.oneeighth || {}).url_full;
+            if (!url || url === _liveHeroUrl) return;
+            const img = new Image();
+            img.crossOrigin = 'anonymous';   // bucket sends ACAO:* so we can read pixels for a brightness check
+            img.onload = () => {
+                // Reject dim frames (pre-dawn / dusk / fog-black) — a dark hero is worse than a 2025 photo.
+                try {
+                    const c = document.createElement('canvas'); c.width = 64; c.height = 8;
+                    const g = c.getContext('2d'); g.drawImage(img, 0, 0, 64, 8);
+                    const d = g.getImageData(0, 0, 64, 8).data; let sum = 0;
+                    for (let i = 0; i < d.length; i += 4) sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+                    if (sum / (d.length / 4) < minLuma) return;
+                } catch (e) { /* canvas tainted → skip the check */ }
+                if (activePhotos[0]?.live) activePhotos.shift();
+                _liveHeroUrl = url;
+                const when = _roundshotTime(latest.datetime);
+                activePhotos.unshift({ url, live: true, when, caption: `Live from the summit cam · ${when}` });
+                carouselIdx = 0;
+                renderCarousel();
+            };
+            img.src = url;
+        } catch (e) { /* keep the photo carousel */ }
+    }
+    function _removeLiveHero() {
+        if (!activePhotos[0]?.live) return;
+        activePhotos.shift(); _liveHeroUrl = null;
+        carouselIdx = 0; renderCarousel();
+    }
+
     function render(data) {
         const cur = data.current;
         const daily = data.daily;
@@ -1854,6 +2019,11 @@
         const T = 7; // today's index in daily arrays (past_days=7)
         const todaySnow   = daily.snowfall_sum[T] || 0;          // inches
         const next24Snow  = hourly.snowfall.slice(0, 24).reduce((a, b) => a + (b || 0), 0);
+        // Fresh snow in the last ~36 h (model) or on the resort feed → swap the hero for the live summit cam (daylight only).
+        const _feed24 = parseFloat(_sbLive?.SnowReport?.SummitArea?.Last24HoursIn) || 0;
+        const _fresh  = todaySnow + (daily.snowfall_sum[T - 1] || 0) >= 1.5 || (cur.snowfall || 0) > 0 || _feed24 >= 2;
+        if (_fresh && cur.is_day) _loadLiveHero(); else _removeLiveHero();
+        const rainier = _rainierStatus(cur);
         const badge = conditionBadge(cur.temperature_2m, snowDepthIn, todaySnow, (cur.rain || 0) > 0);
         const wi = wmo(cur.weather_code);
 
@@ -1898,6 +2068,7 @@
             // Open-Meteo's last forecast day sometimes carries snow/precip but null temperatures; skip it.
             if (daily.temperature_2m_max[i] == null || daily.temperature_2m_min[i] == null) continue;
             dailyCount++;
+            const moreCls = dailyCount > 10 ? ' day-more' : '';
             const d = new Date(daily.time[i] + 'T12:00:00');
             const dayLabel = i === T ? 'Today' : i === T + 1 ? 'Tmrw' : DAYS[d.getDay()];
             const dateLabel = `${d.getMonth()+1}/${d.getDate()}`;
@@ -1907,7 +2078,7 @@
             const snCls = snowClass(sn);
             const precip = daily.precipitation_probability_max[i] || 0;
             dailyHtml += `
-                <div class="day-card ${i === 0 ? 'today' : ''}">
+                <div class="day-card ${i === T ? 'today' : ''}${moreCls}">
                     <div class="day-name">${dayLabel}</div>
                     <div class="day-date">${dateLabel}</div>
                     <div class="day-icon">${w.icon}</div>
@@ -2014,6 +2185,7 @@
                     <div class="weather-condition">${wi.icon} ${wi.ski}</div>
                     <div class="feels-like">Feels like ${fmt(cur.apparent_temperature)}F &nbsp;·&nbsp; Humidity ${cur.relative_humidity_2m}% &nbsp;·&nbsp; Vis ${visStr}</div>
                     <div class="condition-badge ${badge.cls}">${badge.icon} ${badge.label}</div>
+                    <div><span class="rainier-pill ${rainier.cls}" title="${rainier.why}">🏔 ${rainier.label}</span></div>
                     <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.4rem">
                         <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:7px;padding:0.45rem 0.2rem">
                             <div style="font-size:0.52rem;color:#567a96;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">High/Low</div>
@@ -2174,9 +2346,20 @@
                     <span style="color:#3d6680; margin-left:auto; font-size:0.6rem">Filled = recommended &nbsp;·&nbsp; Dim = skiable with caution</span>
                 </div>
                 <div class="ski-summary">${skiSummaryHtml}</div>
-                <div class="section-header" style="margin-top:1rem">📅 ${dailyCount}-Day Outlook</div>
-                <div class="daily-grid">${dailyHtml}</div>
+                <div class="section-header" style="margin-top:1rem">📅 ${Math.min(dailyCount, 10)}-Day Outlook</div>
+                <div class="daily-grid${_outlookExpanded() ? ' expanded' : ''}" id="daily-grid">${dailyHtml}</div>
+                ${dailyCount > 10 ? `<button class="outlook-toggle" id="outlook-toggle" onclick="toggleOutlook()">${_outlookExpanded() ? 'Hide' : 'Show'} days 11–${dailyCount} ${_outlookExpanded() ? '▴' : '▾'}</button>` : ''}
             </div>`;
+    }
+
+    function _outlookExpanded() { try { return localStorage.getItem('ecm_outlook_expanded') === '1'; } catch (e) { return false; } }
+    function toggleOutlook() {
+        const g = document.getElementById('daily-grid'), b = document.getElementById('outlook-toggle');
+        if (!g) return;
+        const on = !g.classList.contains('expanded');
+        g.classList.toggle('expanded', on);
+        try { localStorage.setItem('ecm_outlook_expanded', on ? '1' : '0'); } catch (e) {}
+        if (b) { const n = g.querySelectorAll('.day-card').length; b.textContent = `${on ? 'Hide' : 'Show'} days 11–${n} ${on ? '▴' : '▾'}`; }
     }
 
     let _sbLive = null; // latest mtnpowder Crystal Mountain data, shared with render()
@@ -2758,7 +2941,7 @@
             const el = document.getElementById('cam-roundshot-img');
             if (el) { el.src = url; el.alt = 'Crystal Mountain summit 360 cam — live'; }
             const ts = document.getElementById('cam-roundshot-ts');
-            if (ts && latest.datetime) ts.textContent = '● Live · ' + new Date(latest.datetime * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT';
+            if (ts && latest.datetime) ts.textContent = '● Live · ' + _roundshotTime(latest.datetime);
         } catch (e) { /* keep placeholder */ }
     }
 
@@ -3455,6 +3638,22 @@
         } catch { return null; }
     }
 
+    // Drive-home order = the SR-410 route out of the resort, by drive time from the lot.
+    const _driveMins = b => /on-mountain/i.test(b.drive || '') ? 0 : (parseInt((b.drive || '').replace(/\D/g, ''), 10) || 999);
+    const _breweryTown = b => (b.town || '').replace(/\s*\(.*?\)\s*/g, '').replace(/,\s*WA$/, '').trim();
+    function _breweriesDriveHomeOrder() {
+        return BREWERIES.map((b, i) => ({ b, i })).sort((x, y) => _driveMins(x.b) - _driveMins(y.b) || x.i - y.i).map(x => x.b);
+    }
+    function _breweryDivider(sorted, i) {
+        const b = sorted[i], town = _breweryTown(b);
+        if (i > 0 && _breweryTown(sorted[i - 1]) === town) return '';
+        const stop = sorted.slice(0, i).filter((x, k) => k === 0 || _breweryTown(sorted[k - 1]) !== _breweryTown(x)).length;
+        const onMtn = _driveMins(b) === 0;
+        const label = onMtn ? '⛷ Still on the mountain' : `${stop === 1 ? '🚗' : '↓'} ${town}`;
+        const firstOff = !onMtn && sorted.slice(0, i).every(x => _driveMins(x) === 0);
+        return `<div class="brewery-divider">${label}${b.drive && !onMtn ? `<span class="bd-drive">${b.drive} from the lot</span>` : ''}${firstOff ? '<span class="bd-first">first stop after the lot</span>' : ''}</div>`;
+    }
+
     async function renderBreweries() {
         const container = document.getElementById('breweries-content');
         container.innerHTML = `<div style="padding:1.5rem 1rem;color:#567a96;font-size:0.85rem;display:flex;align-items:center;gap:0.6rem">Loading hours… <span class="loading-spinner"></span></div>`;
@@ -3486,7 +3685,8 @@
             }
         });
 
-        const cards = BREWERIES.map(b => {
+        const sorted = _breweriesDriveHomeOrder();
+        const cardsArr = sorted.map(b => {
             // Determine hours: OSM first (if it has opening_hours), then fallback array
             let hoursInfo = null;
             let hoursFromOSM = false;
@@ -3563,12 +3763,13 @@
                     <a class="brewery-link" href="${b.url}" target="_blank" rel="noopener">Visit website ↗</a>
                 </div>
             </div>`;
-        }).join('');
+        });
+        const cards = cardsArr.map((c, i) => _breweryDivider(sorted, i) + c).join('');
 
         container.innerHTML = `
-            <div class="section-header">🍺 Breweries &amp; Brew Pubs — Closest First <span style="font-size:0.6rem;color:#4ade80;font-weight:600;margin-left:0.75rem">● Live updated</span></div>
+            <div class="section-header">🍺 Breweries &amp; Brew Pubs — Drive-Home Order <span style="font-size:0.6rem;color:#4ade80;font-weight:600;margin-left:0.75rem">● Live updated</span></div>
             <div style="padding:0 1rem 0.5rem; font-size:0.75rem; color:#567a96">
-                Ordered closest first — on-mountain &amp; SR-410 corridor, then the South Sound / Tacoma area, then a few worth-the-drive Seattle destinations
+                Laid out as the drive home: the lot, then down SR-410 through Greenwater and Enumclaw, then the Sumner / Puyallup / Tacoma stops on the way back to the Sound
             </div>
             <div style="padding:0 1rem 0.75rem; font-size:0.72rem; color:#7ec8e3; line-height:1.6">
                 🌎 <strong style="color:#4ade80">Regional</strong> = distributed in stores &amp; bars across multiple states &nbsp;·&nbsp;
@@ -5905,6 +6106,7 @@
                      onerror="carouselImgError(${i})"
                      onload="carouselImgLoaded(${i})">
                 <div class="carousel-overlay"></div>
+                ${p.live ? `<div class="carousel-live"><span class="dot"></span>Live · summit cam · ${p.when}</div>` : ''}
             </div>`).join('')}
             <button class="carousel-btn prev" onclick="carouselStep(-1)">&#8249;</button>
             <button class="carousel-btn next" onclick="carouselStep(1)">&#8250;</button>
@@ -6677,6 +6879,9 @@
                 if (base && base !== '--') items.push({ label: '❄️ Base Depth', val: `${base}"` });
                 if (season && season !== '--') items.push({ label: '📊 Season Total', val: `${season}"` });
             }
+
+            const _rs = _latestWeather && _rainierStatus(_latestWeather.current);
+            if (_rs && _rs.cls) items.push({ label: '🏔 Rainier', val: _rs.ticker, cls: _rs.cls === 'out' ? 'ticker-open' : '' });
 
             // On-hold lifts callout
             const onHold = sbData.MountainAreas
