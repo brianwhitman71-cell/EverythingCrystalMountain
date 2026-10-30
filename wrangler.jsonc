@@ -4,6 +4,7 @@
   "main": "worker.js",
   "compatibility_date": "2026-06-07",
   "observability": { "enabled": true },
+  "workers_dev": true,
   "routes": [
     { "pattern": "everythingcrystalmountain.com", "custom_domain": true },
     { "pattern": "www.everythingcrystalmountain.com", "custom_domain": true }
