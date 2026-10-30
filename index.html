@@ -1445,9 +1445,9 @@
         .poster { position: relative; padding: 24px 0 0 14px; margin-bottom: 1.5rem; }
         .poster-badge { position: absolute; left: -4px; top: 0; width: 150px; height: 150px; z-index: 12; transform: rotate(-11deg); pointer-events: none; filter: drop-shadow(1px 1px 0 rgba(43,29,20,.25)); }
         .photo-carousel { border: 12px solid var(--bark); outline: 3px solid var(--snow); outline-offset: -9px; box-shadow: 6px 6px 0 var(--teal); border-radius: 0; background: var(--bark); height: 300px; margin-bottom: 0; }
-        .carousel-slide img { filter: grayscale(.8) contrast(1.15) brightness(1.02); }
-        .carousel-overlay { background: var(--teal); mix-blend-mode: multiply; opacity: .66; }
-        .carousel-slide::after { content:""; position:absolute; inset:0; background: var(--kraft); mix-blend-mode: screen; opacity: .1; pointer-events: none; }
+        /* Photos and the live cam stay full colour inside the bark frame (Brian, 10/30); only a light foot shade for the wordmark/dots */
+        .carousel-slide img { filter: none; }
+        .carousel-overlay { background: linear-gradient(to bottom, rgba(43,29,20,0.06) 0%, transparent 45%, rgba(43,29,20,0.45) 100%); mix-blend-mode: normal; opacity: 1; }
         .carousel-btn { background: var(--snow); border: 3px solid var(--bark); color: var(--bark); border-radius: 0; width: 40px; height: 40px; box-shadow: 3px 3px 0 var(--bark); -webkit-backdrop-filter: none; backdrop-filter: none; font-family: var(--disp); font-size: 1.4rem; padding-bottom: 3px; }
         .carousel-btn:hover { background: var(--kraft); }
         .carousel-dots { bottom: 0.7rem; right: 0.9rem; gap: 0.4rem; }
