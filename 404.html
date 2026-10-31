@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#2B1D14">
+    <title>Wrong turn · Everything Crystal Mountain</title>
+    <link rel="icon" href="/favicon.ico" sizes="32x32">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icons/icon-180.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root { --kraft:#D9C6A5; --bark:#2B1D14; --moss:#556B2F; --teal:#2A6F7A; --ember:#C7461C; --snow:#F3EFE6; --muted:#6E5A47; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; }
+        body { background: var(--kraft); color: var(--bark); font-family: 'Lora', Georgia, serif; display: flex; align-items: center; justify-content: center; padding: 24px 16px; min-height: 100vh; position: relative; isolation: isolate; }
+        body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
+            background-image: radial-gradient(rgba(43,29,20,.12) .6px, transparent .7px), radial-gradient(rgba(243,239,230,.5) .6px, transparent .7px);
+            background-size: 7px 7px, 11px 11px; background-position: 0 0, 3px 5px; }
+        .bar { position: fixed; left: 0; right: 0; height: 8px; background: var(--bark); }
+        .bar.top { top: 0; } .bar.bot { bottom: 0; }
+        .panel { background: var(--snow); border: 3px solid var(--bark); box-shadow: 6px 6px 0 var(--moss); max-width: 560px; width: 100%; padding: 28px 24px 26px; text-align: center; }
+        .badge { width: 96px; height: 96px; display: block; margin: -62px auto 6px; transform: rotate(-9deg); filter: drop-shadow(1px 1px 0 rgba(43,29,20,.3)); }
+        .sign { display: inline-block; background: var(--bark); color: var(--kraft); font-family: 'Alfa Slab One', serif; font-size: 1.05rem; letter-spacing: .02em; padding: 8px 26px; clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%, 14px 50%); margin: 6px 0 14px; }
+        h1 { font-family: 'Alfa Slab One', serif; font-weight: 400; font-size: clamp(2rem, 7vw, 2.8rem); line-height: 1.05; margin: 0 0 12px; }
+        h1 span { color: var(--ember); }
+        p { font-size: 1.02rem; line-height: 1.55; margin: 0 0 10px; color: var(--bark); }
+        p.small { color: var(--muted); font-size: .9rem; font-style: italic; margin-bottom: 20px; }
+        code { font-family: ui-monospace, Menlo, monospace; font-size: .9em; background: rgba(43,29,20,.08); padding: 1px 6px; color: var(--bark); word-break: break-all; }
+        .btn { display: inline-block; background: var(--ember); color: var(--snow); text-decoration: none; font-family: 'Alfa Slab One', serif; font-size: 1rem; padding: 12px 22px; border: 3px solid var(--bark); box-shadow: 4px 4px 0 var(--bark); min-height: 44px; }
+        .btn:hover, .btn:focus-visible { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--bark); outline: 3px solid var(--teal); outline-offset: 2px; }
+        .links { margin-top: 18px; font-size: .92rem; color: var(--muted); }
+        .links a { color: var(--teal); font-weight: 600; }
+        @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+    </style>
+</head>
+<body>
+    <div class="bar top"></div>
+    <main class="panel">
+        <svg class="badge" viewBox="0 0 200 200" aria-hidden="true">
+            <circle cx="100" cy="100" r="95" fill="#F3EFE6"/>
+            <circle cx="100" cy="100" r="95" fill="none" stroke="#C7461C" stroke-width="6"/>
+            <circle cx="100" cy="100" r="86" fill="none" stroke="#C7461C" stroke-width="2" stroke-dasharray="2 3"/>
+            <path d="M58 128 L82 84 L94 104 L112 72 L142 128 Z" fill="#C7461C"/>
+            <path d="M112 72 L105 85 L110 82 L115 88 L121 81 L124 87 L128 84 Z" fill="#F3EFE6"/>
+            <path d="M82 84 L77 93 L81 91 L85 96 L89 90 Z" fill="#F3EFE6"/>
+            <path d="M60 128 H140" stroke="#C7461C" stroke-width="3"/>
+            <text x="100" y="158" font-family="Alfa Slab One, serif" font-size="22" fill="#C7461C" text-anchor="middle">404</text>
+        </svg>
+        <div class="sign">Trail not found</div>
+        <h1>You took a <span>wrong turn</span> off SR-410.</h1>
+        <p>There is no page at <code id="path">this address</code>. The whole site lives on one page, so the home page is the trailhead for everything.</p>
+        <p class="small">If someone texted you this link, the typo is on their end, not yours.</p>
+        <a class="btn" href="/">Back to the mountain</a>
+        <div class="links">Looking for the <a href="https://www.crystalmountainresort.com/the-mountain/mountain-report-and-webcams">resort's own report</a>?</div>
+    </main>
+    <div class="bar bot"></div>
+    <script>
+        try { document.getElementById('path').textContent = location.host + location.pathname; } catch (e) {}
+    </script>
+</body>
+</html>

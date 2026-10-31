@@ -82,6 +82,12 @@ async function wsdotPasses(env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // www -> apex, permanent. Done here because the API token cannot write zone redirect rules;
+    // run_worker_first is true in wrangler.jsonc so this sees every request, not just /api/*.
+    if (url.hostname.startsWith('www.')) {
+      url.hostname = url.hostname.slice(4);
+      return Response.redirect(url.toString(), 301);
+    }
     if (url.pathname === '/api/proxy') return proxy(request, url);
     if (url.pathname === '/api/wsdot/passes') return wsdotPasses(env);
     if (url.pathname.startsWith('/api/')) return json({ error: 'not found' }, 404);
