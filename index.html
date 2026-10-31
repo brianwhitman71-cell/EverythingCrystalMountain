@@ -1456,6 +1456,7 @@
 
         /* hero poster: bark frame, teal duotone, stamped badge */
         .poster { position: relative; padding: 24px 0 0 14px; margin-bottom: 1.5rem; }
+        #photo-carousel-wrap { min-height: 300px; } /* reserve the poster box before the script fills it (CLS) */
         .photo-credits { font-size: 0.66rem; font-style: italic; color: var(--muted); text-align: right; margin: -1.1rem 0 1.4rem; padding-right: 2px; line-height: 1.4; }
         .poster-badge { position: absolute; left: -4px; top: 0; width: 150px; height: 150px; z-index: 12; transform: rotate(-11deg); pointer-events: none; filter: drop-shadow(1px 1px 0 rgba(43,29,20,.25)); }
         .photo-carousel { border: 12px solid var(--bark); outline: 3px solid var(--snow); outline-offset: -9px; box-shadow: 6px 6px 0 var(--teal); border-radius: 0; background: var(--bark); height: 300px; margin-bottom: 0; }
@@ -1501,6 +1502,7 @@
 
         @media (max-width: 600px) {
             .photo-carousel { height: 240px; border-width: 10px; outline-offset: -8px; }
+            #photo-carousel-wrap { min-height: 240px; }
             .poster { padding: 20px 0 0 10px; }
             .poster-badge { width: 118px; height: 118px; left: -6px; }
             .card, .day-card, .ski-day { box-shadow: 4px 4px 0 var(--moss); }
@@ -1637,6 +1639,7 @@
 <div id="ticker-bar" class="ticker-bar" style="display:none">
     <div class="ticker-track" id="ticker-track"></div>
 </div>
+<div id="ticker-reserve" aria-hidden="true" style="height:35px"></div><!-- holds the ticker's row until it fills, so the page does not jump (CLS) -->
 
 <div class="container">
 
@@ -7591,6 +7594,7 @@
         if (!track || !bar) return;
         track.innerHTML = html + html; // duplicate for seamless loop
         bar.style.display = 'flex';
+        const reserve = document.getElementById('ticker-reserve'); if (reserve) reserve.remove();
 
         // Adjust animation speed proportional to content length
         const totalItems = items.length * 2;
