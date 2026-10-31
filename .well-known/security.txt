@@ -1,0 +1,5 @@
+# Everything Crystal Mountain - security contact (RFC 9116)
+Contact: mailto:brianwhitman71@gmail.com
+Expires: 2027-10-31T12:00:00.000Z
+Preferred-Languages: en
+Canonical: https://everythingcrystalmountain.com/.well-known/security.txt

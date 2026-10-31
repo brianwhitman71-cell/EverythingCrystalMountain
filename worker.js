@@ -79,6 +79,8 @@ async function wsdotPasses(env) {
   return withCors(res);
 }
 
+const PAGE_ROUTES = /^\/(report|food|mrveats|eateries|markets|btv|breweries|cannabis|lodging|maple|webcams|winter|events|rainier)\/?$/;
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -88,6 +90,9 @@ export default {
       url.hostname = url.hostname.slice(4);
       return Response.redirect(url.toString(), 301);
     }
+    // Page routes (/webcams, /btv, ...) are the single-page app's own views: serve the home document with a
+    // 200 and let the client pick the view from the path. Anything else unknown still gets the 404 page.
+    if (PAGE_ROUTES.test(url.pathname)) return env.ASSETS.fetch(new Request(new URL('/', url).toString(), request));
     if (url.pathname === '/api/proxy') return proxy(request, url);
     if (url.pathname === '/api/wsdot/passes') return wsdotPasses(env);
     if (url.pathname.startsWith('/api/')) return json({ error: 'not found' }, 404);
