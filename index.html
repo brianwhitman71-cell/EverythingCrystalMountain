@@ -1301,6 +1301,10 @@
         .trailmap-banner:hover { background: var(--teal); color: var(--snow); }
         .trailmap-banner:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--bark); }
         @media (max-width: 600px) { .trailmap-banner { max-width: none; } }
+        /* the big button opens the winter map itself (Brian 11/19); this line keeps the resort's all-maps page one tap away */
+        .trailmap-banner { margin-bottom: 0.5rem; }
+        .trailmap-more { text-align: center; margin: 0 0 1.1rem; font-size: 0.8rem; font-style: italic; }
+        .trailmap-more a { display: inline-block; padding: 0.45rem 0.6rem; color: var(--teal); text-decoration: underline; text-underline-offset: 2px; }
         #snow-toggle-btn { border: 2px solid var(--bark); color: var(--bark); background: var(--snow); }
         #snow-toggle-btn.snow-on { background: var(--teal); border-color: var(--teal); color: var(--snow); }
         #snow-toggle-btn.snow-off { color: var(--muted); border-color: var(--rule); background: transparent; }
@@ -1372,6 +1376,9 @@
         .badge-icy { background: var(--ember); border-color: var(--ember); color: var(--snow); }
         .badge-good { background: var(--moss); border-color: var(--moss); color: var(--snow); }
         .badge-fair { background: var(--ochre); border-color: var(--ochre); color: var(--snow); }
+        /* snow badge + Rainier pill share one row (Brian 11/19); wraps if the labels run long */
+        .cond-pill-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.5rem; margin-top: 0.9rem; }
+        .cond-pill-row .condition-badge, .cond-pill-row .rainier-pill { margin-top: 0; }
         .rainier-pill { background: var(--kraft); border-color: var(--bark); color: var(--bark); }
         .rainier-pill.out { color: var(--moss); border-color: var(--moss); }
         .rainier-pill.maybe { color: var(--ochre); border-color: var(--ochre); }
@@ -1678,10 +1685,11 @@
             <div id="photo-carousel-wrap"></div>
         </div>
         <div class="photo-credits">Photos: Buidhe, Smacpats1 (CC BY-SA 4.0), Crystalmountainskier (CC BY-SA 3.0), Kaleodu (CC0), NPS (CC BY 2.0), Loren Lane / NPS archive, U.S. Forest Service (public domain) · via Wikimedia Commons</div>
-        <a class="trailmap-banner" href="https://www.crystalmountainresort.com/the-mountain/trail-maps" target="_blank" rel="noopener">
-            <span>🗺 Trail Maps &#8599;&#xFE0E;</span>
-            <small>Winter · Northway · Snowshoe · Base area</small>
+        <a class="trailmap-banner" href="https://www.crystalmountainresort.com/-/media/crystal/images/2526-images/trail-maps/crystal_winter_2627_trail_map_heinz_and_updated_kiehls.jpg" target="_blank" rel="noopener">
+            <span>🗺 Winter Trail Map &#8599;&#xFE0E;</span>
+            <small>2026-27 · full-size map from the resort</small>
         </a>
+        <div class="trailmap-more"><a href="https://www.crystalmountainresort.com/the-mountain/trail-maps" target="_blank" rel="noopener">Northway, snowshoe &amp; base area maps &#8599;&#xFE0E;</a></div>
         <button class="mobile-report-banner" onclick="navigateTo('report')">📋 Today's Mountain Report</button>
         <div id="content">
             <div class="loading">
@@ -2600,8 +2608,10 @@
                     })()}
                     <div class="weather-condition">${wi.icon} ${wi.ski}</div>
                     <div class="feels-like">Feels like ${fmt(cur.apparent_temperature)}${UNITS} &nbsp;·&nbsp; Humidity ${cur.relative_humidity_2m}% &nbsp;·&nbsp; Vis ${visStr}</div>
-                    <div class="condition-badge ${badge.cls}">${badge.icon} ${badge.label}</div>
-                    <div><span class="rainier-pill ${rainier.cls}" title="${rainier.why}">🏔 ${rainier.label}</span></div>
+                    <div class="cond-pill-row">
+                        <div class="condition-badge ${badge.cls}">${badge.icon} ${badge.label}</div>
+                        <span class="rainier-pill ${rainier.cls}" title="${rainier.why}">🏔 ${rainier.label}</span>
+                    </div>
                     <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.4rem">
                         <div style="text-align:center;background:rgba(43,29,20,0.04);border-radius:0;padding:0.45rem 0.2rem">
                             <div style="font-size:0.52rem;color:#5A4836;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem">High/Low</div>
